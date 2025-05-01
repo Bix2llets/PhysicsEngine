@@ -8,6 +8,7 @@
 #include "ball.h"
 const float UPDATE_INTERVAL = 1.0f / 60;
 const float RENDER_INTERVAL = 1.0f / 30;
+const float BOUNCE_FACTOR = 0.1f;  // ! Must be between 0 and 1.f
 sf::RenderWindow window;
 float remainingTime;
 std::vector<Ball> ballList;
@@ -15,6 +16,8 @@ std::vector<Ball> ballList;
 void resolveCollision() {
     using sf::Vector2f;
     using sf::Vector2i;
+
+    using V2f = sf::Vector2f;
     for (int i = 0; i < ballList.size(); i++)
         for (int j = i + 1; j < ballList.size(); j++) {
             if (i == j) continue;
@@ -30,22 +33,51 @@ void resolveCollision() {
                 ball1.getRadius() + ball2.getRadius())  // Separated
                 continue;
 
-            float overlapped = ball1.getRadius() + ball2.getRadius() - ballDistance;
+            float overlapped =
+                ball1.getRadius() + ball2.getRadius() - ballDistance;
+            // Pointing from ball1 to ball2
             Vector2f normalVector;
 
-            if (positionDifference.length() < 1e-6) // The length approaching zero in floating point calculation
+            if (positionDifference.length() <
+                1e-6)  // The length approaching zero in floating point
+                       // calculation
                 normalVector = {1, 0};
             else
                 normalVector = positionDifference.normalized();
 
             float mass1 = ball1.getMass();
             float mass2 = ball2.getMass();
-            ball1.move(-1.0f * normalVector * overlapped * (mass1 / (mass1 + mass2)));
-            ball2.move( 1.0f * normalVector * overlapped * (mass2 / (mass1 + mass2)));
+            // Positioning balls to remove sinking
+            ball1.move(-1.0f * normalVector * overlapped *
+                       (mass1 / (mass1 + mass2)));
+            ball2.move(1.0f * normalVector * overlapped *
+                       (mass2 / (mass1 + mass2)));
 
-            
+            V2f relativeVelocity = ball1.getVelocity() - ball2.getVelocity();
 
+            /*
+             The frame of reference is on ball2. During which it sees that ball1
+             is moving at the relativeVelocity
+             */
 
+            float collisionSpeed = relativeVelocity.dot(normalVector);
+            if (collisionSpeed <= 0) continue;
+            // The trajectory of the ball is colliding. Apply change in velocity
+            // to simulate force impact
+
+            assert(0 <= BOUNCE_FACTOR && BOUNCE_FACTOR <= 1.f);
+
+            float speedChange = collisionSpeed * (1 + BOUNCE_FACTOR);
+
+            V2f deltaVelocity1 = -speedChange * normalVector;
+
+            ball1.setVelocity(ball1.getVelocity() + deltaVelocity1);
+
+            V2f impulseBall2 = deltaVelocity1 * ball1.getMass() * -1.f;
+
+            V2f deltaVelocity2 = impulseBall2 / ball2.getMass();
+
+            ball2.setVelocity(ball2.getVelocity() + deltaVelocity2);
         }
 }
 void Update(sf::Time elapsed) {
@@ -123,6 +155,11 @@ int main() {
         std::cerr << "\n";
         // ball.rotate(sf::radians(0.1));
         // ball.rotate(sf::radians(0.001));
+        sf::Time timePassed = clock.getElapsedTime();
+
+
+        float FPSCount = 1.f/ timePassed.asSeconds();
+        window.setTitle("Physic Engine. FPS: " + std::to_string((int)FPSCount));
         Update(clock.restart());
 
         view.setSize(sf::Vector2f(window.getSize()));
