@@ -1,0 +1,141 @@
+#include <SFML/Graphics.hpp>
+#include <SFML/System.hpp>
+#include <SFML/Window.hpp>
+#include <cstdio>
+#include <iostream>
+#include <vector>
+
+#include "ball.h"
+const float UPDATE_INTERVAL = 1.0f / 60;
+const float RENDER_INTERVAL = 1.0f / 30;
+sf::RenderWindow window;
+float remainingTime;
+std::vector<Ball> ballList;
+
+void resolveCollision() {
+    using sf::Vector2f;
+    using sf::Vector2i;
+    for (int i = 0; i < ballList.size(); i++)
+        for (int j = i + 1; j < ballList.size(); j++) {
+            if (i == j) continue;
+            Ball &ball1 = ballList[i];
+            Ball &ball2 = ballList[j];
+
+            Vector2f positionDifference =
+                ball2.getPosition() - ball1.getPosition();
+
+            float ballDistance = positionDifference.length();
+
+            if (ballDistance >
+                ball1.getRadius() + ball2.getRadius())  // Separated
+                continue;
+
+            float overlapped = ball1.getRadius() + ball2.getRadius() - ballDistance;
+            Vector2f normalVector;
+
+            if (positionDifference.length() < 1e-6) // The length approaching zero in floating point calculation
+                normalVector = {1, 0};
+            else
+                normalVector = positionDifference.normalized();
+
+            float mass1 = ball1.getMass();
+            float mass2 = ball2.getMass();
+            ball1.move(-1.0f * normalVector * overlapped * (mass1 / (mass1 + mass2)));
+            ball2.move( 1.0f * normalVector * overlapped * (mass2 / (mass1 + mass2)));
+
+            
+
+
+        }
+}
+void Update(sf::Time elapsed) {
+    remainingTime += elapsed.asSeconds();
+    while (remainingTime > UPDATE_INTERVAL) {
+        // std::cout << remainingTime << "\n";
+        remainingTime -= UPDATE_INTERVAL;
+        for (auto &ball : ballList)
+            ball.accelerate(sf::Vector2f(0, 9.8f), UPDATE_INTERVAL);
+        for (auto &ball : ballList) ball.update(window, UPDATE_INTERVAL);
+        resolveCollision();
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D))
+            for (auto &ball : ballList)
+                ball.accelerate(sf::Vector2f(1000, 0), UPDATE_INTERVAL);
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W))
+            for (auto &ball : ballList)
+                ball.accelerate(sf::Vector2f(0, -1000), UPDATE_INTERVAL);
+
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S))
+            for (auto &ball : ballList)
+                ball.accelerate(sf::Vector2f(0, 1000), UPDATE_INTERVAL);
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A))
+            for (auto &ball : ballList)
+                ball.accelerate(sf::Vector2f(-1000, 0), UPDATE_INTERVAL);
+    }
+}
+
+void processInput(sf::RenderWindow &window,
+                  const std::optional<sf::Event> &event) {
+    for (auto &ball : ballList) ball.processInput(window, event);
+}
+int main() {
+    srand(time(NULL));
+    sf::Vector2<int> vect;
+    window.setFramerateLimit(60);
+    window.create(sf::VideoMode({1000, 900}), "Billreal's Physic Engine",
+                  sf::Style::Default);
+
+    sf::Clock clock;
+    sf::View view;
+
+    sf::CircleShape circle(50, 30);
+    circle.setOrigin({50, 50});
+    circle.setPosition({100, 100});
+    for (int i = 0; i < 100; i++) {
+        sf::Vector2f position = {(float)(rand() % window.getSize().x),
+                                 (float)(rand() % window.getSize().y)};
+
+        ballList.push_back(Ball(position, 30));
+    }
+    while (window.isOpen()) {
+        // sf::Vector2f mousePosition =
+        // sf::Vector2f(sf::Mouse::getPosition(window)); std::cerr <<
+        // mousePosition.x << " " << mousePosition.y << "\n";
+        while (const std::optional<sf::Event> event = window.pollEvent()) {
+            if (event->is<sf::Event::Closed>())
+                window.close();
+            else if (event->is<sf::Event::KeyPressed>()) {
+                if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Escape))
+                    window.close();
+            } else {
+                processInput(window, event);
+                for (auto &ball : ballList) ball.processInput(window, event);
+            }
+        }
+        using sf::Vector2f;
+        namespace Mouse = sf::Mouse;
+        // ball.move({0.1f, 0.1f});
+        Vector2f mouseWindowPos = Vector2f(Mouse::getPosition(window));
+
+        Vector2f actualPosition =
+            window.mapPixelToCoords(Mouse::getPosition(window));
+        std::cerr << mouseWindowPos.x << " " << mouseWindowPos.y << "\n";
+        std::cerr << actualPosition.x << " " << actualPosition.y << "\n";
+        std::cerr << "\n";
+        // ball.rotate(sf::radians(0.1));
+        // ball.rotate(sf::radians(0.001));
+        Update(clock.restart());
+
+        view.setSize(sf::Vector2f(window.getSize()));
+        view.setCenter(sf::Vector2f(window.getSize()) / 2.f);
+
+        window.setView(view);
+        window.clear(sf::Color::Black);
+
+        for (auto &ball : ballList) ball.render(window);
+        // for (auto &ball : ballList) window.draw(ball);
+        window.display();
+    }
+    vect.x = 1;
+    vect.y = 2;
+    std::cout << vect.x << " " << vect.y << "\n";
+}
