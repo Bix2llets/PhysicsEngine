@@ -4,12 +4,13 @@
 #include <SFML/Window.hpp>
 class Ball : public sf::CircleShape {
    private:
-     static constexpr float GRAVITY = 9800.f;
-     sf::Vector2f velocity;
-     bool isHolding;
+    static constexpr float GRAVITY = 9800.f;
+    sf::Vector2f velocity;
+    bool isHolding;
+    float mass;
 
    public:
-    Ball(sf::Vector2f position, float radius = 10.f,
+    Ball(sf::Vector2f position, float radius = 10.f, float mass = 1.f,
          sf::Color color = sf::Color::White,
          sf::Color borderColor = sf::Color::White, float borderThickness = 2.);
 
@@ -17,19 +18,23 @@ class Ball : public sf::CircleShape {
 
     void render(sf::RenderWindow &window);
 
-    void processInput(sf::RenderWindow &window, const std::optional<sf::Event> &event);
+    void processInput(sf::RenderWindow &window,
+                      const std::optional<sf::Event> &event);
 
     void update(sf::RenderWindow &window, float timeElapsed);
 
     void accelerate(sf::Vector2f acceleration, float timeElapsed);
 
-    void setVelocity(sf::Vector2f newVelocity) { velocity = newVelocity; }
+    inline void setVelocity(sf::Vector2f newVelocity) {
+        velocity = newVelocity;
+    }
 
-    sf::Vector2f getVelocity() const {return velocity;}
+    inline sf::Vector2f getVelocity() const { return velocity; }
 
-    void processMouseEvent(sf::RenderWindow &window, const std::optional<sf::Event> &event);
+    inline void setMass(float newMass) { mass = newMass; }
+    inline float getMass() { return mass; }
+    void processMouseEvent(sf::RenderWindow &window,
+                           const std::optional<sf::Event> &event);
 
     void followCursor(sf::RenderWindow &window);
-
-
 };

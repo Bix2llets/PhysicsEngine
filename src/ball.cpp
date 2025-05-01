@@ -1,9 +1,9 @@
 #include "ball.h"
 
 #include <iostream>
-Ball::Ball(sf::Vector2f position, float radius, sf::Color color,
+Ball::Ball(sf::Vector2f position, float radius, float mass, sf::Color color,
            sf::Color borderColor, float borderThickness)
-    : isHolding{false} {
+    : isHolding{false}, mass{mass} {
     setRadius(radius);
     setOrigin(sf::Vector2f(radius, radius));
     
@@ -13,7 +13,7 @@ Ball::Ball(sf::Vector2f position, float radius, sf::Color color,
     setOutlineThickness(borderThickness);
 }
 
-Ball::Ball() : isHolding{false} {
+Ball::Ball() : isHolding{false}, mass{1.f} {
     setRadius(10);
     setOrigin(sf::Vector2f(10, 10));
     setFillColor(sf::Color::White);
