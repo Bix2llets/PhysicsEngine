@@ -8,7 +8,14 @@
 #include "ball.h"
 const float UPDATE_INTERVAL = 1.0f / 60;
 const float RENDER_INTERVAL = 1.0f / 30;
-const float BOUNCE_FACTOR = 0.1f;  // ! Must be between 0 and 1.f
+const float COLLISION_ENERGY_CONSERVATION_RATIO = 0.95f;
+// ! Should be between -1.f and 0.f
+// ! 0 means energy is conserved
+// ! < 0 means energy is lost
+// ! > 0 or < -1 means energy is gained via handwaving it into reality
+
+
+// TODO: Add friction
 sf::RenderWindow window;
 float remainingTime;
 std::vector<Ball> ballList;
@@ -65,9 +72,11 @@ void resolveCollision() {
             // The trajectory of the ball is colliding. Apply change in velocity
             // to simulate force impact
 
-            assert(0 <= BOUNCE_FACTOR && BOUNCE_FACTOR <= 1.f);
+            // assert(-1.f <= COLLISION_ENERGY_CONSERVATION_RATIO &&
+            // BOUNCE_FACTOR <= 1.f);
 
-            float speedChange = collisionSpeed * (1 + BOUNCE_FACTOR);
+            float speedChange =
+                collisionSpeed * (COLLISION_ENERGY_CONSERVATION_RATIO);
 
             V2f deltaVelocity1 = -speedChange * normalVector;
 
@@ -86,9 +95,9 @@ void Update(sf::Time elapsed) {
         // std::cout << remainingTime << "\n";
         remainingTime -= UPDATE_INTERVAL;
         for (auto &ball : ballList)
-            ball.accelerate(sf::Vector2f(0, 9.8f), UPDATE_INTERVAL);
+            ball.accelerate(sf::Vector2f(0, 980.f), UPDATE_INTERVAL);
         for (auto &ball : ballList) ball.update(window, UPDATE_INTERVAL);
-        resolveCollision();
+        for (int i = 0; i < 3; i++) resolveCollision();
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D))
             for (auto &ball : ballList)
                 ball.accelerate(sf::Vector2f(1000, 0), UPDATE_INTERVAL);
@@ -126,7 +135,8 @@ int main() {
         sf::Vector2f position = {(float)(rand() % window.getSize().x),
                                  (float)(rand() % window.getSize().y)};
 
-        ballList.push_back(Ball(position, 30));
+        ballList.push_back(
+            Ball(position, 30, 1.f, sf::Color::Cyan, sf::Color::Black, 0.5f));
     }
     while (window.isOpen()) {
         // sf::Vector2f mousePosition =
@@ -150,15 +160,14 @@ int main() {
 
         Vector2f actualPosition =
             window.mapPixelToCoords(Mouse::getPosition(window));
-        std::cerr << mouseWindowPos.x << " " << mouseWindowPos.y << "\n";
-        std::cerr << actualPosition.x << " " << actualPosition.y << "\n";
-        std::cerr << "\n";
+        // std::cerr << mouseWindowPos.x << " " << mouseWindowPos.y << "\n";
+        // std::cerr << actualPosition.x << " " << actualPosition.y << "\n";
+        // std::cerr << "\n";
         // ball.rotate(sf::radians(0.1));
         // ball.rotate(sf::radians(0.001));
         sf::Time timePassed = clock.getElapsedTime();
 
-
-        float FPSCount = 1.f/ timePassed.asSeconds();
+        float FPSCount = 1.f / timePassed.asSeconds();
         window.setTitle("Physic Engine. FPS: " + std::to_string((int)FPSCount));
         Update(clock.restart());
 

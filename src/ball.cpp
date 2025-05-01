@@ -21,6 +21,7 @@ Ball::Ball() : isHolding{false}, mass{1.f} {
 };
 
 void Ball::update(sf::RenderWindow &window, float timeElapsed) {
+    using sf::Vector2f;
     if (isHolding) {
         followCursor(window);
         velocity = sf::Vector2f(0.f, 0.f);
@@ -30,6 +31,7 @@ void Ball::update(sf::RenderWindow &window, float timeElapsed) {
     setScale(sf::Vector2f(1.f, 1.f));
 
     move(velocity * timeElapsed);
+    clampPosition(Vector2f{0, 0}, Vector2f{window.getSize()});
 }
 
 void Ball::accelerate(sf::Vector2f acceleration, float timeElapsed) {
@@ -61,6 +63,7 @@ void Ball::processMouseEvent(sf::RenderWindow &window, const std::optional<sf::E
     if (mouseEvent->button == Mouse::Button::Left)
         isHolding = true;
 
+
 }
 
 void Ball::followCursor(sf::RenderWindow &window) {
@@ -73,4 +76,64 @@ void Ball::render(sf::RenderWindow &window) {
 
 void Ball::processInput(sf::RenderWindow &window, const std::optional<sf::Event> &event) {
     processMouseEvent(window, event);
+}
+
+void Ball::clampPosition(sf::Rect<float> rect) {
+    // Calibrate the rectangle
+    rect.position += {getRadius(), getRadius()};
+    rect.size -= {getRadius(), getRadius()};
+
+    if (rect.contains(getPosition())) return;
+
+    sf::Vector2f position = getPosition();
+    if (position.y < rect.position.y)
+    {
+        position.y = rect.position.y;
+        velocity.y *= -EDGE_BOUNCE_FACTOR;
+    } 
+    if (position.y > rect.position.y + rect.size.y) {
+        position.y = rect.position.y + rect.size.y;
+        velocity.y *= -EDGE_BOUNCE_FACTOR; 
+    }
+    if (position.x < rect.position.x)
+    {
+        position.x = rect.position.x;
+        velocity.x *= -EDGE_BOUNCE_FACTOR;
+    } 
+    if (position.x > rect.position.x + rect.size.x) {
+        position.x = rect.position.x + rect.size.x;
+        velocity.x *= -EDGE_BOUNCE_FACTOR; 
+    }
+    setPosition(position);
+
+} 
+
+void Ball::clampPosition(sf::Vector2<float> position, sf::Vector2<float> size) {
+    // Calibrate the rectangle
+    // std::cerr << "Clamping\n";
+    position += {getRadius(), getRadius()};
+    size -= 2.0f * sf::Vector2f((float)getRadius(), (float)getRadius());
+    sf::Rect<float> boundingRectangle(position, size);
+    if (boundingRectangle.contains(getPosition())) return;
+    sf::Vector2f currentPosition = getPosition();
+    if (currentPosition.y < position.y)
+    {
+        currentPosition.y = position.y;
+        velocity.y *= -EDGE_BOUNCE_FACTOR;
+    } 
+    if (currentPosition.y > position.y + size.y) {
+        currentPosition.y = position.y + size.y;
+        velocity.y *= -EDGE_BOUNCE_FACTOR; 
+    }
+    if (currentPosition.x < position.x)
+    {
+        currentPosition.x = position.x;
+        velocity.x *= -EDGE_BOUNCE_FACTOR;
+    } 
+    if (currentPosition.x > position.x + size.x) {
+        currentPosition.x = position.x + size.x;
+        velocity.x *= -EDGE_BOUNCE_FACTOR; 
+    }
+    setPosition(currentPosition);
+
 }

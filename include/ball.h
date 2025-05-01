@@ -2,13 +2,14 @@
 #include <SFML/Graphics/CircleShape.hpp>
 #include <SFML/System.hpp>
 #include <SFML/Window.hpp>
+
 class Ball : public sf::CircleShape {
    private:
     static constexpr float GRAVITY = 9800.f;
     sf::Vector2f velocity;
     bool isHolding;
     float mass;
-
+    static constexpr float EDGE_BOUNCE_FACTOR = 0.5f;
    public:
     Ball(sf::Vector2f position, float radius = 10.f, float mass = 1.f,
          sf::Color color = sf::Color::White,
@@ -37,4 +38,7 @@ class Ball : public sf::CircleShape {
                            const std::optional<sf::Event> &event);
 
     void followCursor(sf::RenderWindow &window);
+
+    void clampPosition(sf::Rect<float> rect);
+    void clampPosition(sf::Vector2<float> position, sf::Vector2<float> size);
 };
