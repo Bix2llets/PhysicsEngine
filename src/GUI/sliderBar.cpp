@@ -1,4 +1,5 @@
 #include "GUI/sliderBar.h"
+
 #include <algorithm>
 SliderBar::SliderBar(sf::Vector2f position, sf::Vector2f size,
                      std::vector<float> portionSize,
@@ -37,11 +38,15 @@ void SliderBar::handleEvent(sf::RenderWindow &window,
 
     if (mouseEventPressed != nullptr &&
         mouseEventPressed->button == sf::Mouse::Button::Left) {
-        sf::Vector2f mousePosition = sf::Vector2f(mouseEventPressed->position);
-        isHolding = true;
-        sf::Vector2f newPosition =
-            window.mapPixelToCoords(sf::Mouse::getPosition(window));
-        updatePosition(newPosition);
+        sf::Vector2f mousePosition =
+            window.mapPixelToCoords(mouseEventPressed->position);
+        if (sliderBase.getGlobalBounds().contains(mousePosition) ||
+            sliderKnob.getGlobalBounds().contains(mousePosition)) {
+            isHolding = true;
+            sf::Vector2f newPosition =
+                window.mapPixelToCoords(sf::Mouse::getPosition(window));
+            updatePosition(newPosition);
+        }
     }
 
     const auto *mouseEventReleased =
@@ -71,5 +76,4 @@ void SliderBar::updatePosition(sf::Vector2f position) {
     currentPercentage = std::max(currentPercentage, 0.f);
     currentPercentage = std::min(currentPercentage, 1.f);
     sliderKnob.setPosition(getKnobPosition(currentPercentage));
-
 }
