@@ -8,13 +8,21 @@
 #include "ball.h"
 const float UPDATE_INTERVAL = 1.0f / 60;
 const float RENDER_INTERVAL = 1.0f / 30;
-const float COLLISION_ENERGY_CONSERVATION_RATIO = 0.95f;
+const float COLLISION_ENERGY_CONSERVATION_RATIO = 0.5f;
 // ! Should be between -1.f and 0.f
 // ! 0 means energy is conserved
 // ! < 0 means energy is lost
 // ! > 0 or < -1 means energy is gained via handwaving it into reality
-
-
+sf::Color Red = sf::Color::Red;
+sf::Color Black = sf::Color::Black;
+sf::Color White = sf::Color::White;
+sf::Color Green = sf::Color::Green;
+sf::Color Magenta = sf::Color::Magenta;
+sf::Color Cyan = sf::Color::Cyan;
+sf::Color Blue = sf::Color::Blue;
+sf::Color Yellow = sf::Color::Yellow;
+std::vector<sf::Color> colorList = {Yellow,  Red,  White, Green,
+                                    Magenta, Cyan, Blue};
 // TODO: Add friction
 sf::RenderWindow window;
 float remainingTime;
@@ -96,7 +104,7 @@ void Update(sf::Time elapsed) {
         remainingTime -= UPDATE_INTERVAL;
         for (auto &ball : ballList)
             ball.accelerate(sf::Vector2f(0, 980.f), UPDATE_INTERVAL);
-        for (auto &ball : ballList) ball.update(window, UPDATE_INTERVAL);
+            for (auto &ball : ballList) ball.update(window, UPDATE_INTERVAL);
         for (int i = 0; i < 3; i++) resolveCollision();
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D))
             for (auto &ball : ballList)
@@ -131,12 +139,12 @@ int main() {
     sf::CircleShape circle(50, 30);
     circle.setOrigin({50, 50});
     circle.setPosition({100, 100});
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < 2; i++) {
         sf::Vector2f position = {(float)(rand() % window.getSize().x),
                                  (float)(rand() % window.getSize().y)};
-
-        ballList.push_back(
-            Ball(position, 30, 1.f, sf::Color::Cyan, sf::Color::Black, 0.5f));
+        int colorIndex = rand() % colorList.size();
+        ballList.push_back(Ball(position, 30, 1.f, colorList[colorIndex],
+                                sf::Color::Black, 0.5f));
     }
     while (window.isOpen()) {
         // sf::Vector2f mousePosition =
