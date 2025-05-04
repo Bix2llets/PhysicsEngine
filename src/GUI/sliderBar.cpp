@@ -1,14 +1,30 @@
 #include "GUI/sliderBar.h"
-#include <iostream>
+
 #include <algorithm>
+#include <iostream>
 SliderBar::SliderBar(sf::Vector2f position, sf::Vector2f size,
                      std::vector<float> portionSize,
                      std::vector<float> sliderValue)
-    : portionSize{portionSize}, sliderValue{sliderValue} {
+    : portionSize{portionSize},
+      sliderValue{sliderValue},
+      textFont{"assets/Inter-Regular.ttf"},
+      sliderText{textFont} {
+    sliderText.setFillColor(sf::Color::White);
+
     sliderBase.setPosition(position);
     sliderBase.setSize(size);
-
+        
+    sf::Vector2f textPosition;
+    textPosition = sliderBase.getPosition();
+    textPosition.x += sliderBase.getSize().x / 2;
+    textPosition.y += sliderBase.getSize().y + KNOB_HEIGHT_ADDITION + 10;
+    sliderText.setPosition(textPosition);
+    
     currentPercentage = 0.5f;
+    
+    sliderText.setString(std::to_string(getValue()));
+    sf::FloatRect bound = sliderText.getLocalBounds();
+    sliderText.setOrigin(bound.size / 2.0f);
 
     sliderKnob.setSize(
         {KNOB_WIDTH, KNOB_HEIGHT_ADDITION * 2 + sliderBase.getSize().y});
@@ -29,6 +45,7 @@ sf::Vector2f SliderBar::getKnobPosition(float percentage) {
 void SliderBar::draw(sf::RenderTarget &target, sf::RenderStates states) const {
     target.draw(sliderBase, states);
     target.draw(sliderKnob, states);
+    target.draw(sliderText);
 }
 
 void SliderBar::handleEvent(sf::RenderWindow &window,
@@ -66,6 +83,10 @@ void SliderBar::update(sf::RenderWindow &window) {
         window.mapPixelToCoords(sf::Mouse::getPosition(window));
 
     updatePosition(newPosition);
+    sliderText.setString(std::to_string(getValue()));
+    sf::FloatRect bound = sliderText.getLocalBounds();
+    sliderText.setOrigin(bound.size / 2.0f);
+    // sliderText.setPosition(sliderKnob.getPosition() + sf::Vector2f{0, 20});
 }
 
 void SliderBar::updatePosition(sf::Vector2f position) {

@@ -1,5 +1,4 @@
 #include <SFML/Graphics.hpp>
-#include <SFML/Graphics/CircleShape.hpp>
 #include <SFML/System.hpp>
 #include <SFML/Window.hpp>
 

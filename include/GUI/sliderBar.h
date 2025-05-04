@@ -9,6 +9,8 @@ class SliderBar : public sf::Drawable {
     static constexpr int KNOB_HEIGHT_ADDITION = 10;
     static constexpr int KNOB_WIDTH = 20;
     bool isHolding = false;
+    sf::Font textFont;
+    sf::Text sliderText;
     // * This should be between 0 (exclusive) and 1 (inclusive), with 0 means
     // the part takes no place inside the slider bar and 1 means takes the whole
     // slider bar
