@@ -34,7 +34,7 @@ class Ball : public sf::CircleShape {
 
     inline void setMass(float newMass) { mass = newMass; }
     inline float getMass() { return mass; }
-    void processMouseEvent(sf::RenderWindow &window,
+    void handleEvent(sf::RenderWindow &window,
                            const std::optional<sf::Event> &event);
 
     void followCursor(sf::RenderWindow &window);

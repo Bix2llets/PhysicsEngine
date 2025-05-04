@@ -38,7 +38,7 @@ void Ball::accelerate(sf::Vector2f acceleration, float timeElapsed) {
     velocity += acceleration * timeElapsed;
 }
 
-void Ball::processMouseEvent(sf::RenderWindow &window, const std::optional<sf::Event> &event) {
+void Ball::handleEvent(sf::RenderWindow &window, const std::optional<sf::Event> &event) {
     using sf::Vector2f;
     namespace Mouse = sf::Mouse;
     using sf::Event;
@@ -75,7 +75,7 @@ void Ball::render(sf::RenderWindow &window) {
 }
 
 void Ball::processInput(sf::RenderWindow &window, const std::optional<sf::Event> &event) {
-    processMouseEvent(window, event);
+    handleEvent(window, event);
 }
 
 void Ball::clampPosition(sf::Rect<float> rect) {
