@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "ball.h"
+#include "GUI/sliderBar.h"
 const float UPDATE_INTERVAL = 1.0f / 60;
 const float RENDER_INTERVAL = 1.0f / 30;
 const float COLLISION_ENERGY_CONSERVATION_RATIO = 0.5f;
@@ -22,11 +23,12 @@ sf::Color Cyan = sf::Color::Cyan;
 sf::Color Blue = sf::Color::Blue;
 sf::Color Yellow = sf::Color::Yellow;
 std::vector<sf::Color> colorList = {Yellow,  Red,  White, Green,
-                                    Magenta, Cyan, Blue};
+    Magenta, Cyan, Blue};
 // TODO: Add friction
 sf::RenderWindow window;
 float remainingTime;
 std::vector<Ball> ballList;
+SliderBar slider({30, 30}, {100, 20}, {1.0f}, {0.f, 5.f});
 
 void resolveCollision() {
     using sf::Vector2f;
@@ -119,12 +121,16 @@ void Update(sf::Time elapsed) {
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A))
             for (auto &ball : ballList)
                 ball.accelerate(sf::Vector2f(-1000, 0), UPDATE_INTERVAL);
+
+
+        slider.update(window);
     }
 }
 
 void processInput(sf::RenderWindow &window,
                   const std::optional<sf::Event> &event) {
     for (auto &ball : ballList) ball.processInput(window, event);
+    slider.handleEvent(window, event);
 }
 int main() {
     srand(time(NULL));
@@ -164,10 +170,10 @@ int main() {
         using sf::Vector2f;
         namespace Mouse = sf::Mouse;
         // ball.move({0.1f, 0.1f});
-        Vector2f mouseWindowPos = Vector2f(Mouse::getPosition(window));
+        // Vector2f mouseWindowPos = Vector2f(Mouse::getPosition(window));
 
-        Vector2f actualPosition =
-            window.mapPixelToCoords(Mouse::getPosition(window));
+        // Vector2f actualPosition =
+        //     window.mapPixelToCoords(Mouse::getPosition(window));
         // std::cerr << mouseWindowPos.x << " " << mouseWindowPos.y << "\n";
         // std::cerr << actualPosition.x << " " << actualPosition.y << "\n";
         // std::cerr << "\n";
@@ -186,6 +192,7 @@ int main() {
         window.clear(sf::Color::Black);
 
         for (auto &ball : ballList) ball.render(window);
+        slider.render(window);
         // for (auto &ball : ballList) window.draw(ball);
         window.display();
     }
