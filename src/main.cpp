@@ -5,11 +5,11 @@
 #include <iostream>
 #include <vector>
 
-#include "ball.h"
 #include "GUI/sliderBar.h"
+#include "ball.h"
 const float UPDATE_INTERVAL = 1.0f / 60;
 const float RENDER_INTERVAL = 1.0f / 30;
-const float COLLISION_ENERGY_CONSERVATION_RATIO = 0.5f;
+float COLLISION_ENERGY_CONSERVATION_RATIO = 1.f;
 // ! Should be between -1.f and 0.f
 // ! 0 means energy is conserved
 // ! < 0 means energy is lost
@@ -23,12 +23,12 @@ sf::Color Cyan = sf::Color::Cyan;
 sf::Color Blue = sf::Color::Blue;
 sf::Color Yellow = sf::Color::Yellow;
 std::vector<sf::Color> colorList = {Yellow,  Red,  White, Green,
-    Magenta, Cyan, Blue};
+                                    Magenta, Cyan, Blue};
 // TODO: Add friction
 sf::RenderWindow window;
 float remainingTime;
 std::vector<Ball> ballList;
-SliderBar slider({30, 30}, {100, 20}, {1.0f}, {0.f, 5.f});
+SliderBar slider({30, 30}, {100, 20}, {1.0f}, {0.f, 1.f});
 
 void resolveCollision() {
     using sf::Vector2f;
@@ -106,7 +106,7 @@ void Update(sf::Time elapsed) {
         remainingTime -= UPDATE_INTERVAL;
         for (auto &ball : ballList)
             ball.accelerate(sf::Vector2f(0, 980.f), UPDATE_INTERVAL);
-            for (auto &ball : ballList) ball.update(window, UPDATE_INTERVAL);
+        for (auto &ball : ballList) ball.update(window, UPDATE_INTERVAL);
         for (int i = 0; i < 3; i++) resolveCollision();
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D))
             for (auto &ball : ballList)
@@ -122,8 +122,8 @@ void Update(sf::Time elapsed) {
             for (auto &ball : ballList)
                 ball.accelerate(sf::Vector2f(-1000, 0), UPDATE_INTERVAL);
 
-
         slider.update(window);
+        COLLISION_ENERGY_CONSERVATION_RATIO = slider.getValue();
     }
 }
 
@@ -145,7 +145,7 @@ int main() {
     sf::CircleShape circle(50, 30);
     circle.setOrigin({50, 50});
     circle.setPosition({100, 100});
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < 100; i++) {
         sf::Vector2f position = {(float)(rand() % window.getSize().x),
                                  (float)(rand() % window.getSize().y)};
         int colorIndex = rand() % colorList.size();

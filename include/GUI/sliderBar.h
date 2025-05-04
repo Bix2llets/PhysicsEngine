@@ -34,5 +34,5 @@ class SliderBar : public sf::Drawable {
 
     void update(sf::RenderWindow &window);
 
-    
+    float getValue();
 };

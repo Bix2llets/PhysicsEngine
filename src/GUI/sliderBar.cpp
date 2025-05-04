@@ -1,5 +1,5 @@
 #include "GUI/sliderBar.h"
-
+#include <iostream>
 #include <algorithm>
 SliderBar::SliderBar(sf::Vector2f position, sf::Vector2f size,
                      std::vector<float> portionSize,
@@ -76,4 +76,26 @@ void SliderBar::updatePosition(sf::Vector2f position) {
     currentPercentage = std::max(currentPercentage, 0.f);
     currentPercentage = std::min(currentPercentage, 1.f);
     sliderKnob.setPosition(getKnobPosition(currentPercentage));
+}
+
+float SliderBar::getValue() {
+    std::vector<float> prefix;
+    prefix.resize(portionSize.size() + 1);
+    prefix[0] = 0.f;
+    for (int i = 1; i < prefix.size(); i++)
+        prefix[i] = portionSize[i - 1] + prefix[i - 1];
+
+    auto upperBoundResult =
+        std::lower_bound(prefix.begin(), prefix.end(), currentPercentage);
+    // assert(upperBoundResult != prefix.end());
+    int valueIndex = upperBoundResult - prefix.begin() - 1;
+
+    float percentageDifference = prefix[valueIndex + 1] - prefix[valueIndex];
+    float ratio =
+        (currentPercentage - prefix[valueIndex]) / (percentageDifference);
+
+    float valueDifference =
+        sliderValue[valueIndex + 1] - sliderValue[valueIndex];
+    std::cerr << currentPercentage << " " << ratio * valueDifference << "\n";
+    return ratio * valueDifference;
 }
