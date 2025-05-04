@@ -97,6 +97,8 @@ void resolveCollision() {
             V2f deltaVelocity2 = impulseBall2 / ball2.getMass();
 
             ball2.setVelocity(ball2.getVelocity() + deltaVelocity2);
+
+            continue;
         }
 }
 void Update(sf::Time elapsed) {
@@ -145,11 +147,13 @@ int main() {
     sf::CircleShape circle(50, 30);
     circle.setOrigin({50, 50});
     circle.setPosition({100, 100});
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < 50; i++) {
         sf::Vector2f position = {(float)(rand() % window.getSize().x),
                                  (float)(rand() % window.getSize().y)};
         int colorIndex = rand() % colorList.size();
-        ballList.push_back(Ball(position, 30, 1.f, colorList[colorIndex],
+        ballList.push_back(Ball(position, 30, 1, sf::Color::Red,
+                                sf::Color::Black, 0.5f));
+        ballList.push_back(Ball(position, 30, 1, sf::Color::Cyan,
                                 sf::Color::Black, 0.5f));
     }
     while (window.isOpen()) {

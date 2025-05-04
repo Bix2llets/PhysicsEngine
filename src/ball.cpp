@@ -1,5 +1,5 @@
 #include "ball.h"
-
+#include <math.h>
 #include <iostream>
 Ball::Ball(sf::Vector2f position, float radius, float mass, sf::Color color,
            sf::Color borderColor, float borderThickness)
@@ -46,8 +46,14 @@ void Ball::handleEvent(sf::RenderWindow &window, const std::optional<sf::Event> 
     if (isHolding) {
         const auto* mouseEvent = event->getIf<Event::MouseButtonReleased>();
         if (mouseEvent == nullptr) return;
-        if (mouseEvent->button == Mouse::Button::Left) 
+        if (mouseEvent->button == Mouse::Button::Left)
+        {
             isHolding = false;
+            float speed = sqrt(accumulatedEnergy * 2 / mass);
+            velocity = speed * previousDisplacement;
+            accumulatedEnergy = 0;
+            previousDisplacement = {0, 0};
+        } 
         return;
     }
     // Vector2f tmp = Vector2f(Mouse::getPosition(window));
@@ -64,10 +70,18 @@ void Ball::handleEvent(sf::RenderWindow &window, const std::optional<sf::Event> 
         isHolding = true;
 
 
+
 }
 
 void Ball::followCursor(sf::RenderWindow &window) {
+    sf::Vector2f previousPosition = getPosition();
     setPosition(window.mapPixelToCoords(sf::Mouse::getPosition(window)));
+    sf::Vector2f currentPosition = getPosition();
+
+    sf::Vector2f displacement = currentPosition - previousPosition;
+    float pathTravelled = displacement.length();
+    accumulatedEnergy += pathTravelled;
+    previousDisplacement = displacement.length() < 1e-6 ? sf::Vector2f{0.f, 0.f} : displacement.normalized() * 100.f;
 }
 
 void Ball::render(sf::RenderWindow &window) {

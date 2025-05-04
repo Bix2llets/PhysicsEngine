@@ -9,6 +9,9 @@ class Ball : public sf::CircleShape {
     bool isHolding;
     float mass;
     static constexpr float EDGE_BOUNCE_FACTOR = 0.5f;
+
+    float accumulatedEnergy = 0.f;
+    sf::Vector2f previousDisplacement;
    public:
     Ball(sf::Vector2f position, float radius = 10.f, float mass = 1.f,
          sf::Color color = sf::Color::White,
