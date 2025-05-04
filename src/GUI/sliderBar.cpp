@@ -96,6 +96,6 @@ float SliderBar::getValue() {
 
     float valueDifference =
         sliderValue[valueIndex + 1] - sliderValue[valueIndex];
-    std::cerr << currentPercentage << " " << ratio * valueDifference << "\n";
+    // std::cerr << currentPercentage << " " << ratio * valueDifference << "\n";
     return ratio * valueDifference;
 }
