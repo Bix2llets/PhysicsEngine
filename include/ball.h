@@ -50,4 +50,5 @@ class Ball : public GUIObject {
     inline sf::Vector2f getPosition() const { return base.getPosition(); };
 
     void move(sf::Vector2f displacement);
+    void setPosition(sf::Vector2f newPosition);
 };

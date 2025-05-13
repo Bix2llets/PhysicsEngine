@@ -101,60 +101,91 @@ void resolveCollision() {
 
             continue;
         }
-}
 
-void processEvent(std::optional<sf::Event> &event, sf::RenderWindow &window) {
-    for (auto &ball: ballList) ball.processEvent(event, window);
-}
+    // * Collision with the border of the screen
 
-void processInput(sf::RenderWindow &window) {
-    for (auto &ball: ballList) ball.processInput(window);
-}
-
-void update(sf::Time elapsedTime) {
-    remainingTime += elapsedTime.asSeconds();
-    while(remainingTime > Info::SIMULATION_INTERVAL) {
-       remainingTime -= Info::SIMULATION_INTERVAL;
-       for (auto &ball: ballList) ball.update();
+    for (Ball &ball: ballList) {
+        sf::Vector2f position = ball.getPosition();
+        sf::Vector2f velocity = ball.getVelocity();
+        float radius = ball.getRadius();
+        if (position.x > Info::SCREEN_WIDTH - radius) {
+            position.x = Info::SCREEN_WIDTH - radius;
+            velocity.x *= -0.8;
+        }
+        if (position.y > Info::SCREEN_HEIGHT - radius) {
+            position.y = Info::SCREEN_HEIGHT - radius;
+            velocity.y *= -0.8;
+        }
+        if (position.x < 0 + radius) {
+            position.x = 0 + radius;
+            velocity.x *= -0.8;
+        }
+        if (position.y < 0 + radius) {
+            position.y = 0 + radius;
+            velocity.y *= -0.8;
+        }
+        ball.setPosition(position);
+        ball.setVelocity(velocity);
     }
 }
 
+void processEvent(std::optional<sf::Event> &event, sf::RenderWindow &window) {
+    for (auto &ball : ballList) ball.processEvent(event, window);
+}
+
+void processInput(sf::RenderWindow &window) {
+    for (auto &ball : ballList) ball.processInput(window);
+}
+
+void update() {
+    for (auto &ball : ballList) ball.update();
+    resolveCollision();
+}
+
 void render(sf::RenderWindow &window) {
-    for (auto &ball: ballList) window.draw(ball);
+    for (auto &ball : ballList) window.draw(ball);
 }
 int main() {
     srand(time(NULL));
     sf::Vector2<int> vect;
     window.setFramerateLimit(60);
-    window.create(sf::VideoMode({Info::SCREEN_WIDTH, Info::SCREEN_HEIGHT}), "Billreal's Physic Engine",
-                  sf::Style::Default);
+    window.create(sf::VideoMode({Info::SCREEN_WIDTH, Info::SCREEN_HEIGHT}),
+                  "Billreal's Physic Engine", sf::Style::Default);
 
     sf::Clock clock;
     sf::View view;
 
-    for (int i = 0; i < 1; i++) {
+    for (int i = 0; i < 50; i++) {
         sf::Vector2f position = {(float)(rand() % window.getSize().x),
                                  (float)(rand() % window.getSize().y)};
         int colorIndex = rand() % colorList.size();
-        ballList.push_back(Ball(position, 30, 1, sf::Color::Red,
-                                sf::Color::Black, 0.5f));
-        ballList.push_back(Ball(position, 30, 1, sf::Color::Cyan,
-                                sf::Color::Black, 0.5f));
+        ballList.push_back(
+            Ball(position, 30, 1, sf::Color::Red, sf::Color::Black, 0.5f));
+        ballList.push_back(
+            Ball(position, 30, 1, sf::Color::Cyan, sf::Color::Black, 0.5f));
     }
+    float elapsedTime = 0;
+    int frameCount = 0;
     while (window.isOpen()) {
-        while(std::optional<sf::Event> event = window.pollEvent()) {
-            if (event->is<sf::Event::Closed>()) 
-                window.close();
+        elapsedTime += clock.getElapsedTime().asSeconds();
+        clock.restart();
+        for (; elapsedTime >= Info::SIMULATION_INTERVAL;
+             elapsedTime -= Info::SIMULATION_INTERVAL) {
+            // frameCount++;
+            // std::cerr << "Frame: " << frameCount << "\n";
+            while (std::optional<sf::Event> event = window.pollEvent()) {
+                if (event->is<sf::Event::Closed>()) window.close();
 
-            processEvent(event, window);
+                processEvent(event, window);
+            }
+
+            processInput(window);
+
+            update();
+            
         }
-
-        processInput(window);
-
-        update(clock.restart());
         window.clear(sf::Color::Black);
         render(window);
-
         window.display();
     }
 }

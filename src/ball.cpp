@@ -64,9 +64,14 @@ void Ball::move(sf::Vector2f displacement) { base.move(displacement); }
 
 bool Ball::handleLeftMousePressed(std::optional<sf::Event> &event,
                                   sf::RenderWindow &window) {
+    if (isHeldLeft) return false;
     const auto *mouseEvent = event->getIf<sf::Event::MouseButtonPressed>();
     if (mouseEvent == nullptr) return false;
     if (mouseEvent->button != sf::Mouse::Button::Left) return false;
+    sf::Vector2f mousePosition = window.mapPixelToCoords(mouseEvent->position);
+
+    if ((mousePosition - base.getPosition()).length() > base.getRadius())
+        return false;
 
     isHeldLeft = true;
     velocity = {0.f, 0.f};
@@ -76,28 +81,39 @@ bool Ball::handleLeftMousePressed(std::optional<sf::Event> &event,
 
 bool Ball::handleLeftMouseReleased(std::optional<sf::Event> &event,
                                    sf::RenderWindow &window) {
+    if (!isHeldLeft) return false;
     const auto *mouseEvent = event->getIf<sf::Event::MouseButtonReleased>();
     if (mouseEvent == nullptr) return false;
     if (mouseEvent->button != sf::Mouse::Button::Left) return false;
 
     isHeldLeft = false;
-
+    std::cerr << previousDisplacement.length() << "\n";
     if (previousDisplacement.length() < 1e-6) return true;
-    float speedGained = std::sqrt(accumulatedEnergy * 2 / mass);
+    float speedGained = sqrt(accumulatedEnergy * 2 / mass);
     accumulatedEnergy = 0;
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::F)) return true;
     velocity = velocity + speedGained * previousDisplacement.normalized();
-
+    std::cerr << "Launched the ball\n";
     return true;
 }
 
 void Ball::processLeftMouseHolding(sf::RenderWindow &window) {
-    if (isHeldLeft) { // * Follow mouse cursor while being held
+    if (isHeldLeft) {  // * Follow mouse cursor while being held
         sf::Vector2i mousePosition = sf::Mouse::getPosition(window);
 
         sf::Vector2f worldPosition = window.mapPixelToCoords(mousePosition);
         previousDisplacement = worldPosition - base.getPosition();
-        accumulatedEnergy = 0.5f * mass * previousDisplacement.lengthSquared();
+        if (previousDisplacement.length() < 1e-6)
+            previousDisplacement = {0.f, 0.f};
+        else
+            previousDisplacement = previousDisplacement.normalized();
+        // std::cerr << previousDisplacement.x << " " << previousDisplacement.y << "\n";
+        accumulatedEnergy += previousDisplacement.length() * 100;
+        std::cerr << accumulatedEnergy << "\n";
         base.setPosition(worldPosition);
     }
+}
+
+void Ball::setPosition(sf::Vector2f newPosition) {
+    base.setPosition(newPosition);
 }
