@@ -92,7 +92,7 @@ bool Ball::handleLeftMouseReleased(std::optional<sf::Event> &event,
     float speedGained = sqrt(accumulatedEnergy * 2 / mass);
     accumulatedEnergy = 0;
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::F)) return true;
-    velocity = velocity + speedGained * previousDisplacement.normalized();
+    velocity = velocity + speedGained * previousDisplacement;
     std::cerr << "Launched the ball\n";
     return true;
 }
@@ -108,7 +108,9 @@ void Ball::processLeftMouseHolding(sf::RenderWindow &window) {
         else
             previousDisplacement = previousDisplacement.normalized();
         // std::cerr << previousDisplacement.x << " " << previousDisplacement.y << "\n";
-        accumulatedEnergy += previousDisplacement.length() * 100;
+        accumulatedEnergy += previousDisplacement.length();
+
+        previousDisplacement *= 100.f;
         std::cerr << accumulatedEnergy << "\n";
         base.setPosition(worldPosition);
     }
