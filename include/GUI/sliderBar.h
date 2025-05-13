@@ -8,7 +8,7 @@ class SliderBar : public sf::Drawable {
     sf::RectangleShape sliderKnob;
     static constexpr int KNOB_HEIGHT_ADDITION = 10;
     static constexpr int KNOB_WIDTH = 20;
-    bool isHolding = false;
+    bool isHeldLeft = false;
     sf::Font textFont;
     sf::Text sliderText;
     // * This should be between 0 (exclusive) and 1 (inclusive), with 0 means

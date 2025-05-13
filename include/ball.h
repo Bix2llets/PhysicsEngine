@@ -1,17 +1,25 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/System.hpp>
 #include <SFML/Window.hpp>
-
-class Ball : public sf::CircleShape {
+#include <cmath>
+#include "GUIObject.h"
+class Ball : public GUIObject {
    private:
+    sf::CircleShape base;
     static constexpr float GRAVITY = 9800.f;
     sf::Vector2f velocity;
-    bool isHolding;
+    bool isHeldLeft;
     float mass;
     static constexpr float EDGE_BOUNCE_FACTOR = 0.5f;
 
     float accumulatedEnergy = 0.f;
     sf::Vector2f previousDisplacement;
+
+    bool handleLeftMousePressed( std::optional<sf::Event> &event, sf::RenderWindow &window);
+    bool handleLeftMouseReleased(std::optional<sf::Event> &event, sf::RenderWindow &window);
+
+    void processLeftMouseHolding(sf::RenderWindow &window);
+
    public:
     Ball(sf::Vector2f position, float radius = 10.f, float mass = 1.f,
          sf::Color color = sf::Color::White,
@@ -19,14 +27,13 @@ class Ball : public sf::CircleShape {
 
     Ball();
 
-    void render(sf::RenderWindow &window);
+    void processInput(sf::RenderWindow &window);
+    bool processEvent(std::optional<sf::Event> &event, sf::RenderWindow &window);
+    void draw(sf::RenderTarget &target,
+                      sf::RenderStates state) const;
+    void update();
 
-    void processInput(sf::RenderWindow &window,
-                      const std::optional<sf::Event> &event);
-
-    void update(sf::RenderWindow &window, float timeElapsed);
-
-    void accelerate(sf::Vector2f acceleration, float timeElapsed);
+    void accelerate(sf::Vector2f acceleration);
 
     inline void setVelocity(sf::Vector2f newVelocity) {
         velocity = newVelocity;
@@ -36,11 +43,11 @@ class Ball : public sf::CircleShape {
 
     inline void setMass(float newMass) { mass = newMass; }
     inline float getMass() { return mass; }
-    void handleEvent(sf::RenderWindow &window,
-                           const std::optional<sf::Event> &event);
 
     void followCursor(sf::RenderWindow &window);
 
-    void clampPosition(sf::Rect<float> rect);
-    void clampPosition(sf::Vector2<float> position, sf::Vector2<float> size);
+    inline float getRadius() const { return base.getRadius(); }
+    inline sf::Vector2f getPosition() const { return base.getPosition(); };
+
+    void move(sf::Vector2f displacement);
 };

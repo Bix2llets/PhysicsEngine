@@ -59,7 +59,7 @@ void SliderBar::handleEvent(sf::RenderWindow &window,
             window.mapPixelToCoords(mouseEventPressed->position);
         if (sliderBase.getGlobalBounds().contains(mousePosition) ||
             sliderKnob.getGlobalBounds().contains(mousePosition)) {
-            isHolding = true;
+            isHeldLeft = true;
             sf::Vector2f newPosition =
                 window.mapPixelToCoords(sf::Mouse::getPosition(window));
             updatePosition(newPosition);
@@ -71,13 +71,13 @@ void SliderBar::handleEvent(sf::RenderWindow &window,
 
     if (mouseEventReleased != nullptr &&
         mouseEventReleased->button == sf::Mouse::Button::Left)
-        isHolding = false;
+        isHeldLeft = false;
 }
 
 void SliderBar::render(sf::RenderWindow &window) { window.draw(*this); }
 
 void SliderBar::update(sf::RenderWindow &window) {
-    if (!isHolding) return;
+    if (!isHeldLeft) return;
 
     sf::Vector2f newPosition =
         window.mapPixelToCoords(sf::Mouse::getPosition(window));
