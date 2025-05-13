@@ -206,7 +206,7 @@ int main() {
 
             update();
 
-            std::cerr << getEnergy() << "\n";
+            window.setTitle("Physics Engine. Total energy: " + std::to_string(getEnergy()));
         }
         window.clear(sf::Color::Black);
         render(window);
