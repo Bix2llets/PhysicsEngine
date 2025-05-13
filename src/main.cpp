@@ -10,7 +10,8 @@
 #include "info.h"
 const float UPDATE_INTERVAL = 1.0f / 60;
 const float RENDER_INTERVAL = 1.0f / 30;
-float COLLISION_ENERGY_CONSERVATION_RATIO = 1.f;
+float ballCollisionConservationRatio = 1.f;
+float wallCollisionConservationRatio = 1.f;
 // ! Should be between -1.f and 0.f
 // ! 0 means energy is conserved
 // ! < 0 means energy is lost
@@ -29,8 +30,15 @@ std::vector<sf::Color> colorList = {Yellow,  Red,  White, Green,
 sf::RenderWindow window;
 float remainingTime;
 std::vector<Ball> ballList;
-SliderBar slider({30, 30}, {100, 20}, {1.0f}, {0.f, 1.f});
-
+SliderBar ballBounceSlider({30, 30}, {100, 20}, {1.0f}, {0.f, 1.f});
+SliderBar wallBounceSlider({30, 100}, {100, 20}, {1.0f}, {0.f, 1.f});
+float getEnergy() {
+    float result;
+    for (auto &ball : ballList) {
+        result = result + ball.getMass() + ball.getVelocity().lengthSquared();
+    }
+    return result * 1e-6;
+}
 void resolveCollision() {
     using sf::Vector2f;
     using sf::Vector2i;
@@ -83,11 +91,11 @@ void resolveCollision() {
             // The trajectory of the ball is colliding. Apply change in velocity
             // to simulate force impact
 
-            // assert(-1.f <= COLLISION_ENERGY_CONSERVATION_RATIO &&
+            // assert(-1.f <= ballCollisionConservationRatio &&
             // BOUNCE_FACTOR <= 1.f);
 
             float speedChange =
-                collisionSpeed * (COLLISION_ENERGY_CONSERVATION_RATIO);
+                collisionSpeed * (ballCollisionConservationRatio);
 
             V2f deltaVelocity1 = -speedChange * normalVector;
 
@@ -110,19 +118,19 @@ void resolveCollision() {
         float radius = ball.getRadius();
         if (position.x > Info::SCREEN_WIDTH - radius) {
             position.x = Info::SCREEN_WIDTH - radius;
-            velocity.x *= -0.8;
+            velocity.x *= -wallCollisionConservationRatio;
         }
         if (position.y > Info::SCREEN_HEIGHT - radius) {
             position.y = Info::SCREEN_HEIGHT - radius;
-            velocity.y *= -0.8;
+            velocity.y *= -wallCollisionConservationRatio;
         }
         if (position.x < 0 + radius) {
             position.x = 0 + radius;
-            velocity.x *= -0.8;
+            velocity.x *= -wallCollisionConservationRatio;
         }
         if (position.y < 0 + radius) {
             position.y = 0 + radius;
-            velocity.y *= -0.8;
+            velocity.y *= -wallCollisionConservationRatio;
         }
         ball.setPosition(position);
         ball.setVelocity(velocity);
@@ -130,20 +138,35 @@ void resolveCollision() {
 }
 
 void processEvent(std::optional<sf::Event> &event, sf::RenderWindow &window) {
+    bool isSliderInteracted = false;
+    isSliderInteracted |= ballBounceSlider.processEvent(event, window);
+    isSliderInteracted |= wallBounceSlider.processEvent(event, window);
+    if (isSliderInteracted) return;
     for (auto &ball : ballList) ball.processEvent(event, window);
 }
 
 void processInput(sf::RenderWindow &window) {
+    ballBounceSlider.processInput(window);
+    wallBounceSlider.processInput(window);
     for (auto &ball : ballList) ball.processInput(window);
+
 }
 
 void update() {
     for (auto &ball : ballList) ball.update();
     for (int i = 0; i < 3; i++) resolveCollision();
+
+    ballBounceSlider.update();
+    wallBounceSlider.update();
+
+    ballCollisionConservationRatio = ballBounceSlider.getValue();
+    wallCollisionConservationRatio = wallBounceSlider.getValue();
 }
 
 void render(sf::RenderWindow &window) {
     for (auto &ball : ballList) window.draw(ball);
+    window.draw(wallBounceSlider);
+    window.draw(ballBounceSlider);
 }
 int main() {
     srand(time(NULL));
@@ -182,6 +205,8 @@ int main() {
             processInput(window);
 
             update();
+
+            std::cerr << getEnergy() << "\n";
         }
         window.clear(sf::Color::Black);
         render(window);

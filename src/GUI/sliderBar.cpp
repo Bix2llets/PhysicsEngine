@@ -13,15 +13,15 @@ SliderBar::SliderBar(sf::Vector2f position, sf::Vector2f size,
 
     sliderBase.setPosition(position);
     sliderBase.setSize(size);
-        
+
     sf::Vector2f textPosition;
     textPosition = sliderBase.getPosition();
     textPosition.x += sliderBase.getSize().x / 2;
     textPosition.y += sliderBase.getSize().y + KNOB_HEIGHT_ADDITION + 10;
     sliderText.setPosition(textPosition);
-    
+
     currentPercentage = 0.5f;
-    
+
     sliderText.setString(std::to_string(getValue()));
     sf::FloatRect bound = sliderText.getLocalBounds();
     sliderText.setOrigin(bound.size / 2.0f);
@@ -48,41 +48,47 @@ void SliderBar::draw(sf::RenderTarget &target, sf::RenderStates states) const {
     target.draw(sliderText);
 }
 
-void SliderBar::handleEvent(sf::RenderWindow &window,
-                            const std::optional<sf::Event> &event) {
-    const auto *mouseEventPressed =
-        event->getIf<sf::Event::MouseButtonPressed>();
-
-    if (mouseEventPressed != nullptr &&
-        mouseEventPressed->button == sf::Mouse::Button::Left) {
-        sf::Vector2f mousePosition =
-            window.mapPixelToCoords(mouseEventPressed->position);
-        if (sliderBase.getGlobalBounds().contains(mousePosition) ||
-            sliderKnob.getGlobalBounds().contains(mousePosition)) {
-            isHeldLeft = true;
-            sf::Vector2f newPosition =
-                window.mapPixelToCoords(sf::Mouse::getPosition(window));
-            updatePosition(newPosition);
-        }
-    }
-
-    const auto *mouseEventReleased =
-        event->getIf<sf::Event::MouseButtonReleased>();
-
-    if (mouseEventReleased != nullptr &&
-        mouseEventReleased->button == sf::Mouse::Button::Left)
-        isHeldLeft = false;
+bool SliderBar::processEvent(std::optional<sf::Event> &event,
+                             sf::RenderWindow &window) {
+    bool result = false;
+    result |= processLeftMouseClicked(event, window);
+    result |= processLeftMouseReleased(event, window);
+    return result;
 }
 
-void SliderBar::render(sf::RenderWindow &window) { window.draw(*this); }
+bool SliderBar::processLeftMouseClicked(std::optional<sf::Event> &event,
+                                        sf::RenderWindow &window) {
+    if (isHeldLeft) return false;
+    auto *mouseEventPressed = event->getIf<sf::Event::MouseButtonPressed>();
 
-void SliderBar::update(sf::RenderWindow &window) {
-    if (!isHeldLeft) return;
-
+    if (mouseEventPressed == nullptr) return false;
+    if (mouseEventPressed->button != sf::Mouse::Button::Left) return false;
+    sf::Vector2f mousePosition =
+        window.mapPixelToCoords(mouseEventPressed->position);
+    if (!sliderBase.getGlobalBounds().contains(mousePosition) &&
+        !sliderBase.getGlobalBounds().contains(mousePosition))
+        return false;
+    isHeldLeft = true;
     sf::Vector2f newPosition =
         window.mapPixelToCoords(sf::Mouse::getPosition(window));
-
     updatePosition(newPosition);
+    return true;
+}
+
+bool SliderBar::processLeftMouseReleased(std::optional<sf::Event> &event,
+                                         sf::RenderWindow &window) {
+    if (!isHeldLeft) return false;
+    const auto *mouseEventReleased =
+        event->getIf<sf::Event::MouseButtonReleased>();
+    if (mouseEventReleased == nullptr) return false;
+    if (mouseEventReleased->button != sf::Mouse::Button::Left) return false;
+    isHeldLeft = false;
+    return true;
+}
+
+void SliderBar::update() {
+    if (!isHeldLeft) return;
+
     sliderText.setString(std::to_string(getValue()));
     sf::FloatRect bound = sliderText.getLocalBounds();
     sliderText.setOrigin(bound.size / 2.0f);
@@ -119,4 +125,12 @@ float SliderBar::getValue() {
         sliderValue[valueIndex + 1] - sliderValue[valueIndex];
     // std::cerr << currentPercentage << " " << ratio * valueDifference << "\n";
     return ratio * valueDifference;
+}
+
+void SliderBar::processInput(sf::RenderWindow &window) {
+    if (isHeldLeft) {
+        sf::Vector2f mousePosition =
+            window.mapPixelToCoords(sf::Mouse::getPosition(window));
+        updatePosition(mousePosition);
+    }
 }

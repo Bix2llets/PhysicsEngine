@@ -2,7 +2,9 @@
 #include <SFML/System.hpp>
 #include <optional>
 #include <vector>
-class SliderBar : public sf::Drawable {
+
+#include "GUIObject.h"
+class SliderBar : public GUIObject {
    private:
     sf::RectangleShape sliderBase;
     sf::RectangleShape sliderKnob;
@@ -24,17 +26,20 @@ class SliderBar : public sf::Drawable {
 
     void updatePosition(sf::Vector2f position);
 
+    bool processLeftMouseClicked(std::optional<sf::Event> &event, sf::RenderWindow &window);
+    bool processLeftMouseReleased(std::optional<sf::Event> &event, sf::RenderWindow &window);
+    
+
    public:
     SliderBar(sf::Vector2f position, sf::Vector2f size,
               std::vector<float> portionSize, std::vector<float> sliderValue);
 
-    void handleEvent(sf::RenderWindow &window,
-                     const std::optional<sf::Event> &event);
+    bool processEvent(std::optional<sf::Event> &event, sf::RenderWindow &window);
+
+    void processInput(sf::RenderWindow &window);
     void draw(sf::RenderTarget &target, sf::RenderStates states) const override;
 
-    void render(sf::RenderWindow &window);
-
-    void update(sf::RenderWindow &window);
+    void update();
 
     float getValue();
 };
