@@ -66,7 +66,7 @@ bool SliderBar::processLeftMouseClicked(std::optional<sf::Event> &event,
     sf::Vector2f mousePosition =
         window.mapPixelToCoords(mouseEventPressed->position);
     if (!sliderBase.getGlobalBounds().contains(mousePosition) &&
-        !sliderBase.getGlobalBounds().contains(mousePosition))
+        !sliderKnob.getGlobalBounds().contains(mousePosition))
         return false;
     isHeldLeft = true;
     sf::Vector2f newPosition =
