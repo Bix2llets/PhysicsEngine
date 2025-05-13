@@ -34,11 +34,11 @@ void Ball::draw(sf::RenderTarget &target, sf::RenderStates state) const {
 
 void Ball::processInput(sf::RenderWindow &window) {
     processLeftMouseHolding(window);
+    processKeyboardAcceleration();
 }
 
 bool Ball::processEvent(std::optional<sf::Event> &event,
                         sf::RenderWindow &window) {
-    // * Left mouse clicked
     bool processResult = false;
     processResult |= handleLeftMousePressed(event, window);
     processResult |= handleLeftMouseReleased(event, window);
@@ -99,6 +99,7 @@ bool Ball::handleLeftMouseReleased(std::optional<sf::Event> &event,
 
 void Ball::processLeftMouseHolding(sf::RenderWindow &window) {
     if (isHeldLeft) {  // * Follow mouse cursor while being held
+        velocity = {0.f, 0.f};
         sf::Vector2i mousePosition = sf::Mouse::getPosition(window);
 
         sf::Vector2f worldPosition = window.mapPixelToCoords(mousePosition);
@@ -107,7 +108,6 @@ void Ball::processLeftMouseHolding(sf::RenderWindow &window) {
             previousDisplacement = {0.f, 0.f};
         else
             previousDisplacement = previousDisplacement.normalized();
-        // std::cerr << previousDisplacement.x << " " << previousDisplacement.y << "\n";
         accumulatedEnergy += previousDisplacement.length();
 
         previousDisplacement *= 100.f;
@@ -118,4 +118,18 @@ void Ball::processLeftMouseHolding(sf::RenderWindow &window) {
 
 void Ball::setPosition(sf::Vector2f newPosition) {
     base.setPosition(newPosition);
+}
+
+void Ball::processKeyboardAcceleration() {
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A))
+        accelerate({-980.f, 0.f});
+
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D))
+        accelerate({980.f, 0.f});
+
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W))
+        accelerate({0.f, -980.f});
+
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S))
+        accelerate({0.f, 980.f});
 }

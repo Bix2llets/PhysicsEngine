@@ -19,6 +19,7 @@ class Ball : public GUIObject {
     bool handleLeftMouseReleased(std::optional<sf::Event> &event, sf::RenderWindow &window);
 
     void processLeftMouseHolding(sf::RenderWindow &window);
+    void processKeyboardAcceleration();
 
    public:
     Ball(sf::Vector2f position, float radius = 10.f, float mass = 1.f,

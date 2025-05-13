@@ -104,7 +104,7 @@ void resolveCollision() {
 
     // * Collision with the border of the screen
 
-    for (Ball &ball: ballList) {
+    for (Ball &ball : ballList) {
         sf::Vector2f position = ball.getPosition();
         sf::Vector2f velocity = ball.getVelocity();
         float radius = ball.getRadius();
@@ -139,7 +139,7 @@ void processInput(sf::RenderWindow &window) {
 
 void update() {
     for (auto &ball : ballList) ball.update();
-    resolveCollision();
+    for (int i = 0; i < 3; i++) resolveCollision();
 }
 
 void render(sf::RenderWindow &window) {
@@ -182,7 +182,6 @@ int main() {
             processInput(window);
 
             update();
-            
         }
         window.clear(sf::Color::Black);
         render(window);
