@@ -149,7 +149,6 @@ void processInput(sf::RenderWindow &window) {
     ballBounceSlider.processInput(window);
     wallBounceSlider.processInput(window);
     for (auto &ball : ballList) ball.processInput(window);
-
 }
 
 void update() {
@@ -206,7 +205,8 @@ int main() {
 
             update();
 
-            window.setTitle("Physics Engine. Total energy: " + std::to_string(getEnergy()));
+            window.setTitle("Physics Engine. Total energy: " +
+                            std::to_string(getEnergy()));
         }
         window.clear(sf::Color::Black);
         render(window);
