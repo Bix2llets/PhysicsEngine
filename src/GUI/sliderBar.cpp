@@ -22,7 +22,9 @@ SliderBar::SliderBar(sf::Vector2f position, sf::Vector2f size,
 
     currentPercentage = 0.5f;
 
-    sliderText.setString(std::to_string(getValue()));
+    std::string text = std::to_string(getValue());
+    text = text.substr(0, text.find('.') + 1 + 2);
+    sliderText.setString(text);
     sf::FloatRect bound = sliderText.getLocalBounds();
     sliderText.setOrigin(bound.size / 2.0f);
 
@@ -88,8 +90,10 @@ bool SliderBar::processLeftMouseReleased(std::optional<sf::Event> &event,
 
 void SliderBar::update() {
     if (!isHeldLeft) return;
-
-    sliderText.setString(std::to_string(getValue()));
+    std::string text = std::to_string(getValue());
+    int decimalLocation = text.find('.', 0);
+    text = text.substr(0, decimalLocation + 3);
+    sliderText.setString(text);
     sf::FloatRect bound = sliderText.getLocalBounds();
     sliderText.setOrigin(bound.size / 2.0f);
     // sliderText.setPosition(sliderKnob.getPosition() + sf::Vector2f{0, 20});

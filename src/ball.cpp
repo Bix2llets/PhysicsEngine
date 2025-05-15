@@ -34,7 +34,6 @@ void Ball::draw(sf::RenderTarget &target, sf::RenderStates state) const {
 
 void Ball::processInput(sf::RenderWindow &window) {
     processLeftMouseHolding(window);
-    processKeyboardAcceleration();
 }
 
 bool Ball::processEvent(std::optional<sf::Event> &event,
