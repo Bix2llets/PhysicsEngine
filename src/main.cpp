@@ -8,6 +8,8 @@
 #include "GUI/sliderBar.h"
 #include "ball.h"
 #include "info.h"
+#include "Scene/scene.h"
+#include "Scene/BallScene.h"
 const float UPDATE_INTERVAL = 1.0f / 60;
 const float RENDER_INTERVAL = 1.0f / 30;
 float ballCollisionConservationRatio = 1.f;
@@ -177,15 +179,8 @@ int main() {
     sf::Clock clock;
     sf::View view;
 
-    for (int i = 0; i < 50; i++) {
-        sf::Vector2f position = {(float)(rand() % window.getSize().x),
-                                 (float)(rand() % window.getSize().y)};
-        int colorIndex = rand() % colorList.size();
-        ballList.push_back(
-            Ball(position, 30, 1, sf::Color::Red, sf::Color::Black, 0.5f));
-        ballList.push_back(
-            Ball(position, 30, 1, sf::Color::Cyan, sf::Color::Black, 0.5f));
-    }
+    BallScene ballScene(window, {0.f, 0.f}, sf::Vector2f{window.getSize()});
+    Scene* currentScene = &ballScene;
     float elapsedTime = 0;
     int frameCount = 0;
     while (window.isOpen()) {
@@ -197,19 +192,18 @@ int main() {
             // std::cerr << "Frame: " << frameCount << "\n";
             while (std::optional<sf::Event> event = window.pollEvent()) {
                 if (event->is<sf::Event::Closed>()) window.close();
-
-                processEvent(event, window);
+                else {
+                    currentScene->processEvent(event);
+                }
             }
+            currentScene->processInput();
 
-            processInput(window);
-
-            update();
-
-            window.setTitle("Physics Engine. Total energy: " +
-                            std::to_string(getEnergy()));
+            currentScene->update();
+            
+            window.setTitle("Physics Engine. Total energy: " + std::to_string(ballScene.getEnergy()));
         }
         window.clear(sf::Color::Black);
-        render(window);
+        currentScene->render();
         window.display();
     }
 }
