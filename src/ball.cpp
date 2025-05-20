@@ -87,9 +87,9 @@ bool Ball::handleLeftMouseReleased(std::optional<sf::Event> &event,
 
     isHeldLeft = false;
     std::cerr << previousDisplacement.length() << "\n";
-    if (previousDisplacement.length() < 1e-6) return true;
     float speedGained = sqrt(accumulatedEnergy * 2 / mass);
     accumulatedEnergy = 0;
+    if (previousDisplacement.length() < 1e-6) return true;
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::F)) return true;
     velocity = velocity + speedGained * previousDisplacement;
     std::cerr << "Launched the ball\n";

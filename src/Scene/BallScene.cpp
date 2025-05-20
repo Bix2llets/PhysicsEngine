@@ -45,7 +45,7 @@ void BallScene::update() {
     ballBounceSlider.update();
     wallBounceSlider.update();
 
-    int iterations = std::min(int(1 + ballList.size() / 10), 10);
+    int iterations = std::min(int(1 + ballList.size() / 10), 5);
     for (int i = 0; i < iterations; i++) resolveCollision();
 }
 
