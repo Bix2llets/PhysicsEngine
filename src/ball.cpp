@@ -12,6 +12,7 @@ Ball::Ball(sf::Vector2f position, float radius, float mass, sf::Color color,
     base.setOrigin(sf::Vector2f(radius, radius));
 
     base.setPosition(position);
+    previousPosition = position;
     base.setFillColor(color);
     base.setOutlineColor(borderColor);
     base.setOutlineThickness(borderThickness);
@@ -23,10 +24,6 @@ Ball::Ball() : isHeldLeft{false}, mass{1.f} {
     base.setFillColor(sf::Color::White);
     base.setOutlineColor(sf::Color::Blue);
 };
-
-void Ball::accelerate(sf::Vector2f acceleration) {
-    velocity += acceleration * Info::SIMULATION_INTERVAL;
-}
 
 void Ball::draw(sf::RenderTarget &target, sf::RenderStates state) const {
     target.draw(base, state);
@@ -44,7 +41,16 @@ bool Ball::processEvent(std::optional<sf::Event> &event,
     return processResult;
 }
 
-void Ball::update() { base.move(velocity * Info::SIMULATION_INTERVAL); }
+void Ball::update() {
+    sf::Vector2f nextPosition = 2.f * base.getPosition() - previousPosition +
+                                0.5f * acceleration *
+                                    Info::POLLING_INTERVAL *
+                                    Info::POLLING_INTERVAL;
+    previousPosition = base.getPosition();
+    base.setPosition(nextPosition);
+
+    acceleration = {0.f, 0.f};
+}
 
 void Ball::followCursor(sf::RenderWindow &window) {
     sf::Vector2f previousPosition = base.getPosition();
@@ -73,7 +79,7 @@ bool Ball::handleLeftMousePressed(std::optional<sf::Event> &event,
         return false;
 
     isHeldLeft = true;
-    velocity = {0.f, 0.f};
+    previousPosition = base.getPosition();
 
     return true;
 }
@@ -86,19 +92,22 @@ bool Ball::handleLeftMouseReleased(std::optional<sf::Event> &event,
     if (mouseEvent->button != sf::Mouse::Button::Left) return false;
 
     isHeldLeft = false;
-    std::cerr << previousDisplacement.length() << "\n";
+    // std::cerr << previousDisplacement.length() << "\n";
     float speedGained = sqrt(accumulatedEnergy * 2 / mass);
     accumulatedEnergy = 0;
     if (previousDisplacement.length() < 1e-6) return true;
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::F)) return true;
-    velocity = velocity + speedGained * previousDisplacement;
-    std::cerr << "Launched the ball\n";
+    sf::Vector2f initialVelocity = previousDisplacement * speedGained;
+    
+    base.setPosition(base.getPosition());
+    
+    previousPosition = base.getPosition() - initialVelocity * Info::POLLING_INTERVAL;
+    // std::cerr << "Launched the ball\n";
     return true;
 }
 
 void Ball::processLeftMouseHolding(sf::RenderWindow &window) {
     if (isHeldLeft) {  // * Follow mouse cursor while being held
-        velocity = {0.f, 0.f};
         sf::Vector2i mousePosition = sf::Mouse::getPosition(window);
 
         sf::Vector2f worldPosition = window.mapPixelToCoords(mousePosition);
@@ -110,8 +119,10 @@ void Ball::processLeftMouseHolding(sf::RenderWindow &window) {
         accumulatedEnergy += previousDisplacement.length();
 
         previousDisplacement *= 100.f;
-        std::cerr << accumulatedEnergy << "\n";
+        // std::cerr << accumulatedEnergy << "\n";
         base.setPosition(worldPosition);
+        previousPosition = worldPosition;  // * So the velocity is zero;
+        acceleration = {0.f, 0.f};
     }
 }
 
@@ -119,16 +130,19 @@ void Ball::setPosition(sf::Vector2f newPosition) {
     base.setPosition(newPosition);
 }
 
-void Ball::processKeyboardAcceleration() {
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A))
-        accelerate({-980.f, 0.f});
+void Ball::addForceImpact(sf::Vector2f force) {
+    sf::Vector2f forceAcceleration = force / mass;
+    acceleration += forceAcceleration;
+}
 
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D))
-        accelerate({980.f, 0.f});
+void Ball::setPreviousPosition(sf::Vector2f position) {
+    previousPosition = position;
+}
 
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W))
-        accelerate({0.f, -980.f});
+sf::Vector2f Ball::getVelocity() {
+    return (base.getPosition() - previousPosition) / Info::POLLING_INTERVAL;
+}
 
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S))
-        accelerate({0.f, 980.f});
+void Ball::setVelocity(sf::Vector2f velocity) {
+    previousPosition = base.getPosition() - velocity * Info::POLLING_INTERVAL;
 }

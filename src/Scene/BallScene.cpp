@@ -1,13 +1,13 @@
 #include "Scene/BallScene.h"
 
+#include <algorithm>
 #include <chrono>
 #include <random>
-#include <algorithm>
+
 #include "Scene/scene.h"
-const std::vector<float> BallScene::GRAVITY_STRENGTH_DIVISION = {0.4f, 0.1f,
-                                                                 0.1f, 0.4f};
-const std::vector<float> BallScene::GRAVITY_STRENGTH_VALUES = {
-    -9800.f, -980.f, 0.f, 980.f, 9800.f};
+#include "info.h"
+const std::vector<float> BallScene::GRAVITY_STRENGTH_DIVISION = {1.f};
+const std::vector<float> BallScene::GRAVITY_STRENGTH_VALUES = {0.f, 980.f};
 const sf::Vector2f BallScene::GRAVITY_BAR_POSITION = {10.f, 10.f};
 
 const std::vector<float> BallScene::BALL_BOUNCE_DIVISION = {1.f};
@@ -40,13 +40,16 @@ void BallScene::render() {
 }
 
 void BallScene::update() {
+    for (auto &ball : ballList)
+        ball.addForceImpact(
+            {0.f, gravityStrengthSlider.getValue() * ball.getMass()});
     for (auto &ball : ballList) ball.update();
     gravityStrengthSlider.update();
     ballBounceSlider.update();
     wallBounceSlider.update();
 
-    int iterations = std::min(int(1 + ballList.size() / 10), 5);
-    for (int i = 0; i < iterations; i++) resolveCollision();
+    for (int i = 0; i < Info::POLLING_INTERVAL / Info::SIMULATION_INTERVAL; i++)
+        resolveCollision();
 }
 
 void BallScene::processEvent(std::optional<sf::Event> &event) {
@@ -63,14 +66,14 @@ void BallScene::processEvent(std::optional<sf::Event> &event) {
         if (keyPressed->code == sf::Keyboard::Key::R) {
             for (auto &ball : ballList) {
                 ball.setPosition(position + size / 2.f);
-                ball.setVelocity(sf::Vector2f{0.f, 0.f});
+                ball.setPreviousPosition(position + size / 2.f);
             }
         }
         if (keyPressed->code == sf::Keyboard::Key::Q) {
-            addBall(sf::Color::Red, true);
+            addBall(sf::Color::Red, false, 100);
         }
         if (keyPressed->code == sf::Keyboard::Key::W) {
-            addBall(sf::Color::Cyan, false);
+            addBall(sf::Color::Cyan, false, 1);
         }
         if (keyPressed->code == sf::Keyboard::Key::E) {
             removeBall();
@@ -89,13 +92,13 @@ void BallScene::processInput() {
 
     for (auto &ball : ballList) {
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up))
-            ball.accelerate({0, -ACCELERATE_FORCE});
+            ball.addForceImpact({0, -ACCELERATE_FORCE});
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left))
-            ball.accelerate({-ACCELERATE_FORCE, 0});
+            ball.addForceImpact({-ACCELERATE_FORCE, 0});
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Down))
-            ball.accelerate({0, ACCELERATE_FORCE});
+            ball.addForceImpact({0, ACCELERATE_FORCE});
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right))
-            ball.accelerate({ACCELERATE_FORCE, 0});
+            ball.addForceImpact({ACCELERATE_FORCE, 0});
     }
 }
 
@@ -106,7 +109,7 @@ int BallScene::randRange(int lowerVal, int upperVal) {
     return distribution(gen);
 }
 
-void BallScene::addBall(sf::Color color, bool isRandom) {
+void BallScene::addBall(sf::Color color, bool isRandom, int mass) {
     sf::Vector2f ballPosition;
     if (isRandom) {
         ballPosition.x = randRange(position.x, position.x + size.x);
@@ -144,7 +147,8 @@ void BallScene::resolveBallCollision() {
             if (positionDifference.length() <
                 1e-6)  // The length approaching zero in floating point
                        // calculation
-                normalVector = sf::Vector2f{1, 0}.rotatedBy(sf::degrees((float)randRange(0, 360)));
+                normalVector = sf::Vector2f{1, 0}.rotatedBy(
+                    sf::degrees((float)randRange(0, 360)));
             else
                 normalVector = positionDifference.normalized();
             float mass1 = ball1.getMass();
@@ -155,25 +159,42 @@ void BallScene::resolveBallCollision() {
             ball2.move(1.0f * normalVector * overlapped *
                        (mass2 / (mass1 + mass2)));
 
-            V2f relativeVelocity = ball1.getVelocity() - ball2.getVelocity();
-            /*
-             The frame of reference is on ball2. During which it sees that ball1
-             is moving at the relativeVelocity
-             */
-            float collisionSpeed = relativeVelocity.dot(normalVector);
-            if (collisionSpeed <= 0) continue;
-            // The trajectory of the ball is colliding. Apply change in velocity
-            // to simulate force impact
-            // assert(-1.f <= ballCollisionConservationRatio &&
-            // BOUNCE_FACTOR <= 1.f);
-            float speedChange = collisionSpeed * (ballBounceSlider.getValue());
-            V2f deltaVelocity1 = -speedChange * normalVector;
-            ball1.setVelocity(ball1.getVelocity() + deltaVelocity1);
+            sf::Vector2f vBall1 = ball1.getVelocity();
+            sf::Vector2f vBall2 = ball2.getVelocity();
 
-            V2f impulseBall2 = deltaVelocity1 * ball1.getMass() * -1.f;
-            V2f deltaVelocity2 = impulseBall2 / ball2.getMass();
-            ball2.setVelocity(ball2.getVelocity() + deltaVelocity2);
-            continue;
+            float v1Normal = vBall1.dot(normalVector);
+            float v2Normal = vBall2.dot(normalVector);
+
+            float bounceFactor = ballBounceSlider.getValue();
+
+            if (v1Normal > v2Normal) {
+                // Calculate new velocities
+                float totalMass = mass1 + mass2;
+                float v1Final = ((mass1 - bounceFactor * mass2) * v1Normal +
+                                 (1 + bounceFactor) * mass2 * v2Normal) /
+                                totalMass;
+                float v2Final = ((1 + bounceFactor) * mass1 * v1Normal +
+                                 (mass2 - bounceFactor * mass1) * v2Normal) /
+                                totalMass;
+
+                // For Verlet integration, we need to set proper previous positions
+                // to achieve the desired post-collision velocity
+                sf::Vector2f currentPos1 = ball1.getPosition();
+                sf::Vector2f currentPos2 = ball2.getPosition();
+
+                // We need the full velocity vectors (normal + tangential components)
+                sf::Vector2f tangent(-normalVector.y, normalVector.x);
+                float v1Tangent = vBall1.dot(tangent);
+                float v2Tangent = vBall2.dot(tangent);
+
+                // Construct full post-collision velocities
+                sf::Vector2f v1New = normalVector * v1Final + tangent * v1Tangent;
+                sf::Vector2f v2New = normalVector * v2Final + tangent * v2Tangent;
+
+                // Set previous positions to create these velocities in next update
+                ball1.setPreviousPosition(currentPos1 - v1New * Info::POLLING_INTERVAL);
+                ball2.setPreviousPosition(currentPos2 - v2New * Info::POLLING_INTERVAL);
+            }
         }
 }
 
@@ -182,22 +203,25 @@ void BallScene::resolveBorderCollision() {
         sf::Vector2f ballPosition = ball.getPosition();
         sf::Vector2f velocity = ball.getVelocity();
         float radius = ball.getRadius();
+        bool isBounced = false;
+        float conservationRatio = wallBounceSlider.getValue();
         if (ballPosition.x > position.x + size.x - radius) {
             ballPosition.x = position.x + size.x - radius;
-            velocity.x *= -wallBounceSlider.getValue();
+            velocity.x *= -conservationRatio;
         }
         if (ballPosition.y > position.y + size.y - radius) {
             ballPosition.y = position.y + size.y - radius;
-            velocity.y *= -wallBounceSlider.getValue();
+            velocity.y *= -conservationRatio;
         }
         if (ballPosition.x < position.x + radius) {
             ballPosition.x = position.x + radius;
-            velocity.x *= -wallBounceSlider.getValue();
+            velocity.x *= -conservationRatio;
         }
         if (ballPosition.y < position.y + radius) {
             ballPosition.y = position.y + radius;
-            velocity.y *= -wallBounceSlider.getValue();
+            velocity.y *= -conservationRatio;
         }
+
         ball.setPosition(ballPosition);
         ball.setVelocity(velocity);
     }

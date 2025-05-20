@@ -8,11 +8,12 @@ class Ball : public GUIObject {
    private:
     sf::CircleShape base;
     static constexpr float GRAVITY = 9800.f;
-    sf::Vector2f velocity;
+    sf::Vector2f acceleration;
     bool isHeldLeft;
     float mass;
     static constexpr float EDGE_BOUNCE_FACTOR = 0.5f;
 
+    sf::Vector2f previousPosition;
     float accumulatedEnergy = 0.f;
     sf::Vector2f previousDisplacement;
 
@@ -20,7 +21,6 @@ class Ball : public GUIObject {
     bool handleLeftMouseReleased(std::optional<sf::Event> &event, sf::RenderWindow &window);
 
     void processLeftMouseHolding(sf::RenderWindow &window);
-    void processKeyboardAcceleration();
 
    public:
     Ball(sf::Vector2f position, float radius = 10.f, float mass = 1.f,
@@ -35,13 +35,13 @@ class Ball : public GUIObject {
                       sf::RenderStates state) const;
     void update();
 
-    void accelerate(sf::Vector2f acceleration);
 
-    inline void setVelocity(sf::Vector2f newVelocity) {
-        velocity = newVelocity;
+    inline void addAcceleration(sf::Vector2f accelerateValue) {
+        acceleration += accelerateValue;
     }
 
-    inline sf::Vector2f getVelocity() const { return velocity; }
+    void addForceImpact(sf::Vector2f force);
+
 
     inline void setMass(float newMass) { mass = newMass; }
     inline float getMass() { return mass; }
@@ -52,5 +52,9 @@ class Ball : public GUIObject {
     inline sf::Vector2f getPosition() const { return base.getPosition(); };
 
     void move(sf::Vector2f displacement);
+    void setPreviousPosition(sf::Vector2f position);
     void setPosition(sf::Vector2f newPosition);
+
+    sf::Vector2f getVelocity();
+    void setVelocity(sf::Vector2f velocity);
 };
