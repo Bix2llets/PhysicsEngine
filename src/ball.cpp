@@ -42,10 +42,9 @@ bool Ball::processEvent(std::optional<sf::Event> &event,
 }
 
 void Ball::update() {
-    sf::Vector2f nextPosition = 2.f * base.getPosition() - previousPosition +
-                                acceleration *
-                                    Info::POLLING_INTERVAL *
-                                    Info::POLLING_INTERVAL;
+    sf::Vector2f nextPosition =
+        2.f * base.getPosition() - previousPosition +
+        acceleration * Info::POLLING_INTERVAL * Info::POLLING_INTERVAL;
     previousPosition = base.getPosition();
     base.setPosition(nextPosition);
 
@@ -65,7 +64,10 @@ void Ball::followCursor(sf::RenderWindow &window) {
                                : displacement.normalized() * 100.f;
 }
 
-void Ball::move(sf::Vector2f displacement) { base.move(displacement); }
+void Ball::move(sf::Vector2f displacement) {
+    previousPosition += displacement;
+    base.move(displacement);
+}
 
 bool Ball::handleLeftMousePressed(std::optional<sf::Event> &event,
                                   sf::RenderWindow &window) {
@@ -98,10 +100,11 @@ bool Ball::handleLeftMouseReleased(std::optional<sf::Event> &event,
     if (previousDisplacement.length() < 1e-6) return true;
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::F)) return true;
     sf::Vector2f initialVelocity = previousDisplacement * speedGained;
-    
+
     base.setPosition(base.getPosition());
-    
-    previousPosition = base.getPosition() - initialVelocity * Info::POLLING_INTERVAL;
+
+    previousPosition =
+        base.getPosition() - initialVelocity * Info::POLLING_INTERVAL;
     // std::cerr << "Launched the ball\n";
     return true;
 }

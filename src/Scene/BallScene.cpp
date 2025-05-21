@@ -153,37 +153,14 @@ void BallScene::resolveBallCollision() {
                 normalVector = positionDifference.normalized();
             float mass1 = ball1.getMass();
             float mass2 = ball2.getMass();
+            // ball1.setPreviousPosition(ball1.getPosition());
+            // ball2.setPreviousPosition(ball2.getPosition());
             // Positioning balls to remove sinking
             ball1.move(-1.0f * normalVector * overlapped *
                        (mass1 / (mass1 + mass2)));
             ball2.move(1.0f * normalVector * overlapped *
                        (mass2 / (mass1 + mass2)));
 
-            V2f relativeVelocity = ball1.getVelocity() - ball2.getVelocity();
-            /*
-             The frame of reference is on ball2. During which it sees that ball1
-             is moving at the relativeVelocity
-             */
-            float collisionSpeed = relativeVelocity.dot(normalVector);
-            if (collisionSpeed <= 0) continue;
-            // The trajectory of the ball is colliding. Apply change in velocity
-            // to simulate force impact
-            // assert(-1.f <= ballCollisionConservationRatio &&
-            // BOUNCE_FACTOR <= 1.f);
-            float restitution = ballBounceSlider.getValue();
-
-            // Calculate impulse scalar using conservation of momentum and
-            // energy
-            float impulseScalar = (-(1.0f + restitution) * collisionSpeed) /
-                                  ((1.0f / mass1) + (1.0f / mass2));
-
-            // Apply impulse to both balls
-            V2f impulse = normalVector * impulseScalar;
-
-            V2f v1 = ball1.getVelocity();
-            V2f v2 = ball2.getVelocity();
-            ball1.setVelocity(v1 + impulse / mass1);
-            ball2.setVelocity(v2 - impulse / mass2);
         }
 }
 
