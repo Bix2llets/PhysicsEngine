@@ -70,13 +70,16 @@ void BallScene::processEvent(std::optional<sf::Event> &event) {
             }
         }
         if (keyPressed->code == sf::Keyboard::Key::Q) {
-            addBall(sf::Color::Red, false, 10, 50);
+            addBall(sf::Color::Red, false, 10, 30);
         }
         if (keyPressed->code == sf::Keyboard::Key::W) {
             addBall(sf::Color::Cyan, false, 1, 20);
         }
         if (keyPressed->code == sf::Keyboard::Key::E) {
             removeBall();
+        }
+        if (keyPressed->code == sf::Keyboard::Key::T) {
+            addBall(sf::Color::Green, false, 100, 40);
         }
         if (keyPressed->code == sf::Keyboard::Key::C) {
             ballList.clear();
@@ -149,10 +152,8 @@ void BallScene::resolveBallCollision() {
                 float totalMass = mass1 + mass2;
 
                 // Move balls apart proportional to their mass
-                ball1.setPosition(ball1.getPosition() +
-                                  normal * (overlap * mass2 / totalMass));
-                ball2.setPosition(ball2.getPosition() -
-                                  normal * (overlap * mass1 / totalMass));
+                ball1.shift(1.f * normal * (overlap * mass2 / totalMass));
+                ball2.shift(-1.f * normal * (overlap * mass1 / totalMass));
 
                 // Calculate relative velocity
                 sf::Vector2f relativeVelocity =
@@ -175,15 +176,6 @@ void BallScene::resolveBallCollision() {
                     sf::Vector2f impulse = normal * impulseScalar;
                     ball1.addVelocity(+1.0f * impulse / mass1);
                     ball2.addVelocity(-1.0f * impulse / mass2);
-                }
-                const float maxSpeed = 1000.f;
-                if (ball1.getVelocity().length() > maxSpeed) {
-                    ball1.setVelocity(ball1.getVelocity().normalized() *
-                                      maxSpeed);
-                }
-                if (ball2.getVelocity().length() > maxSpeed) {
-                    ball2.setVelocity(ball2.getVelocity().normalized() *
-                                      maxSpeed);
                 }
             }
         }
@@ -222,8 +214,11 @@ void BallScene::resolveBorderCollision() {
 }
 
 void BallScene::resolveCollision() {
-    resolveBallCollision();
-    resolveBorderCollision();
+    int substeps = 2;
+    for (int i = 0; i < substeps; i++) {
+        resolveBallCollision();
+        resolveBorderCollision();
+    }
 }
 
 float BallScene::getEnergy() {
