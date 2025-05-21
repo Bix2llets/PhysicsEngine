@@ -37,7 +37,7 @@ class BallScene : public Scene {
     static const sf::Vector2f BAR_DIMENSION;
     static const float ACCELERATE_FORCE;
 
-    void addBall(sf::Color color, bool isRandom = false, int mass = 1);
+    void addBall(sf::Color color, bool isRandom = false, int mass = 1, int radius = 20);
     void removeBall();
     int randRange(int lowerVal, int upperVal);
 

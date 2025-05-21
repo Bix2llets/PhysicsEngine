@@ -1,60 +1,64 @@
 #pragma once
 #include <SFML/Graphics.hpp>
-#include <SFML/System.hpp>
-#include <SFML/Window.hpp>
-#include <cmath>
+
 #include "GUIObject.h"
+
 class Ball : public GUIObject {
+    // * Motion part
+   public:
+    // * Constructor and desstructor
+    Ball(sf::Vector2f position, float mass = 1, float radius = 10,
+         sf::Color color = sf::Color::White);
+    Ball() = default;
+
    private:
-    sf::CircleShape base;
-    static constexpr float GRAVITY = 9800.f;
-    sf::Vector2f acceleration;
-    bool isHeldLeft;
-    float mass;
-    static constexpr float EDGE_BOUNCE_FACTOR = 0.5f;
-
+    sf::Vector2f position;
     sf::Vector2f previousPosition;
-    float accumulatedEnergy = 0.f;
-    sf::Vector2f previousDisplacement;
+    sf::Vector2f acceleration;
 
-    bool handleLeftMousePressed( std::optional<sf::Event> &event, sf::RenderWindow &window);
-    bool handleLeftMouseReleased(std::optional<sf::Event> &event, sf::RenderWindow &window);
+   public:
+    inline sf::Vector2f getPosition() const { return position; }
+    inline sf::Vector2f getPreviousPosition() const { return previousPosition; }
+    inline sf::Vector2f getAcceleration() const { return acceleration; }
 
+    inline void setPosition(sf::Vector2f pos) {
+        position = pos;
+        base.setPosition(position);
+    };
+    inline void setPreviousPosition(sf::Vector2f pos) {
+        previousPosition = pos;
+    }
+    void move(sf::Vector2f displacement);
+    
+    inline void setAcceleration(sf::Vector2f acc) { acceleration = acc; }
+
+    void addForceImpact(sf::Vector2f force);
+    void addAcceleration(sf::Vector2f acc);
+
+    void shift(sf::Vector2f displacement);
+
+    sf::Vector2f getVelocity();
+    void addVelocity(sf::Vector2f velocity);
+    void setVelocity(sf::Vector2f velocity);
+    // * GUIObject part
+   private:
+    float mass;
+    sf::CircleShape base;
+    bool isHeldLeft;
+    bool handleLeftMousePressed(std::optional<sf::Event> &event,
+                                sf::RenderWindow &window);
+    bool handleLeftMouseReleased(std::optional<sf::Event> &event,
+                                 sf::RenderWindow &window);
+    void followCursor(sf::RenderWindow &window);
     void processLeftMouseHolding(sf::RenderWindow &window);
 
    public:
-    Ball(sf::Vector2f position, float radius = 10.f, float mass = 1.f,
-         sf::Color color = sf::Color::White,
-         sf::Color borderColor = sf::Color::White, float borderThickness = 2.);
-
-    Ball();
-
-    void processInput(sf::RenderWindow &window);
-    bool processEvent(std::optional<sf::Event> &event, sf::RenderWindow &window);
-    void draw(sf::RenderTarget &target,
-                      sf::RenderStates state) const;
     void update();
+    bool processEvent(std::optional<sf::Event> &event,
+                      sf::RenderWindow &window);
+    void processInput(sf::RenderWindow &window);
+    void draw(sf::RenderTarget &target, sf::RenderStates state) const;
 
-
-    inline void addAcceleration(sf::Vector2f accelerateValue) {
-        acceleration += accelerateValue;
-    }
-
-    void addForceImpact(sf::Vector2f force);
-
-
-    inline void setMass(float newMass) { mass = newMass; }
-    inline float getMass() { return mass; }
-
-    void followCursor(sf::RenderWindow &window);
-
+    inline float getMass() const { return mass; }
     inline float getRadius() const { return base.getRadius(); }
-    inline sf::Vector2f getPosition() const { return base.getPosition(); };
-
-    void move(sf::Vector2f displacement);
-    void setPreviousPosition(sf::Vector2f position);
-    void setPosition(sf::Vector2f newPosition);
-
-    sf::Vector2f getVelocity();
-    void setVelocity(sf::Vector2f velocity);
 };

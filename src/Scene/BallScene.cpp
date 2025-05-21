@@ -2,12 +2,13 @@
 
 #include <algorithm>
 #include <chrono>
+#include <iostream>
 #include <random>
 
 #include "Scene/scene.h"
 #include "info.h"
 const std::vector<float> BallScene::GRAVITY_STRENGTH_DIVISION = {1.f};
-const std::vector<float> BallScene::GRAVITY_STRENGTH_VALUES = {0.f, 980.f};
+const std::vector<float> BallScene::GRAVITY_STRENGTH_VALUES = {-980.f, 980.f};
 const sf::Vector2f BallScene::GRAVITY_BAR_POSITION = {10.f, 10.f};
 
 const std::vector<float> BallScene::BALL_BOUNCE_DIVISION = {1.f};
@@ -48,8 +49,7 @@ void BallScene::update() {
     ballBounceSlider.update();
     wallBounceSlider.update();
 
-    for (int i = 0; i < Info::POLLING_INTERVAL / Info::SIMULATION_INTERVAL; i++)
-        resolveCollision();
+    resolveCollision();
 }
 
 void BallScene::processEvent(std::optional<sf::Event> &event) {
@@ -70,10 +70,10 @@ void BallScene::processEvent(std::optional<sf::Event> &event) {
             }
         }
         if (keyPressed->code == sf::Keyboard::Key::Q) {
-            addBall(sf::Color::Red, false, 100);
+            addBall(sf::Color::Red, false, 10, 50);
         }
         if (keyPressed->code == sf::Keyboard::Key::W) {
-            addBall(sf::Color::Cyan, false, 1);
+            addBall(sf::Color::Cyan, false, 1, 20);
         }
         if (keyPressed->code == sf::Keyboard::Key::E) {
             removeBall();
@@ -109,7 +109,7 @@ int BallScene::randRange(int lowerVal, int upperVal) {
     return distribution(gen);
 }
 
-void BallScene::addBall(sf::Color color, bool isRandom, int mass) {
+void BallScene::addBall(sf::Color color, bool isRandom, int mass, int radius) {
     sf::Vector2f ballPosition;
     if (isRandom) {
         ballPosition.x = randRange(position.x, position.x + size.x);
@@ -118,50 +118,78 @@ void BallScene::addBall(sf::Color color, bool isRandom, int mass) {
         ballPosition = sf::Vector2f{
             window.mapPixelToCoords(sf::Mouse::getPosition(window))};
     }
-    ballList.push_back(
-        Ball(ballPosition, 10.f, 1.f, color, sf::Color::Green, 0.f));
+    ballList.push_back(Ball(ballPosition, mass, radius, color));
 }
 
 void BallScene::resolveBallCollision() {
-    using sf::Vector2f;
-    using sf::Vector2i;
+    for (auto it1 = ballList.begin(); it1 != ballList.end(); ++it1) {
+        Ball &ball1 = *it1;
+        for (auto it2 = it1 + 1; it2 != ballList.end(); ++it2) {
+            Ball &ball2 = *it2;
 
-    using V2f = sf::Vector2f;
-    for (int i = 0; i < ballList.size(); i++)
-        for (int j = i + 1; j < ballList.size(); j++) {
-            if (i == j) continue;
-            Ball &ball1 = ballList[i];
-            Ball &ball2 = ballList[j];
+            sf::Vector2f delta = ball1.getPosition() - ball2.getPosition();
+            float distance = delta.length();
+            float minDistance = ball1.getRadius() + ball2.getRadius();
 
-            Vector2f positionDifference =
-                ball2.getPosition() - ball1.getPosition();
-            float ballDistance = positionDifference.length();
-            if (ballDistance >
-                ball1.getRadius() + ball2.getRadius())  // Separated
-                continue;
+            // Check if balls are colliding
+            if (distance < minDistance) {
+                // Normalize the collision vector
+                sf::Vector2f normal;
 
-            float overlapped =
-                ball1.getRadius() + ball2.getRadius() - ballDistance;
-            // Pointing from ball1 to ball2
-            Vector2f normalVector;
-            if (positionDifference.length() <
-                1e-6)  // The length approaching zero in floating point
-                       // calculation
-                normalVector = sf::Vector2f{1, 0}.rotatedBy(
-                    sf::degrees((float)randRange(0, 360)));
-            else
-                normalVector = positionDifference.normalized();
-            float mass1 = ball1.getMass();
-            float mass2 = ball2.getMass();
-            // ball1.setPreviousPosition(ball1.getPosition());
-            // ball2.setPreviousPosition(ball2.getPosition());
-            // Positioning balls to remove sinking
-            ball1.move(-1.0f * normalVector * overlapped *
-                       (mass1 / (mass1 + mass2)));
-            ball2.move(1.0f * normalVector * overlapped *
-                       (mass2 / (mass1 + mass2)));
+                if (distance == 0)
+                    normal = sf::Vector2f{1.f, 0.f}.rotatedBy(
+                        sf::Angle(sf::degrees(randRange(0, 360))));
+                else
+                    normal = delta / distance;
 
+                // Calculate the overlap and separate balls
+                float overlap = minDistance - distance;
+                float mass1 = ball1.getMass();
+                float mass2 = ball2.getMass();
+                float totalMass = mass1 + mass2;
+
+                // Move balls apart proportional to their mass
+                ball1.setPosition(ball1.getPosition() +
+                                  normal * (overlap * mass2 / totalMass));
+                ball2.setPosition(ball2.getPosition() -
+                                  normal * (overlap * mass1 / totalMass));
+
+                // Calculate relative velocity
+                sf::Vector2f relativeVelocity =
+                    ball1.getVelocity() - ball2.getVelocity();
+
+                // Get bounce coefficient
+                float bounceFactor = ballBounceSlider.getValue();
+
+                // Project relative velocity onto collision normal
+                float velAlongNormal = relativeVelocity.dot(normal);
+
+                // Do not resolve if objects are moving away from each other
+                if (velAlongNormal <= 0) {
+                    // Calculate impulse scalar
+                    float impulseScalar =
+                        -(1.0f + bounceFactor) * velAlongNormal;
+                    impulseScalar /= (1.0f / mass1) + (1.0f / mass2);
+
+                    // Apply impulse to velocities
+                    sf::Vector2f impulse = normal * impulseScalar;
+                    ball1.addVelocity(+1.0f * impulse / mass1);
+                    ball2.addVelocity(-1.0f * impulse / mass2);
+                }
+                const float maxSpeed = 1000.f;
+                if (ball1.getVelocity().length() > maxSpeed) {
+                    ball1.setVelocity(ball1.getVelocity().normalized() *
+                                      maxSpeed);
+                }
+                if (ball2.getVelocity().length() > maxSpeed) {
+                    ball2.setVelocity(ball2.getVelocity().normalized() *
+                                      maxSpeed);
+                }
+            }
         }
+    }
+    // std::cerr << ball1.getVelocity().length() << " " <<
+    // ball2.getVelocity().length() << "\n";
 }
 
 void BallScene::resolveBorderCollision() {

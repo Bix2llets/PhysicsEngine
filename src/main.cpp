@@ -65,11 +65,16 @@ int main() {
                     currentScene->processEvent(event);
                 }
             }
-            currentScene->processInput();
-            currentScene->update();
+
+            for (int i = Info::POLLING_INTERVAL / Info::SIMULATION_INTERVAL;
+                 i > 0; i--) {
+                currentScene->processInput();
+                currentScene->update();
+            }
 
             window.setTitle("Physics Engine. Total energy: " +
-                            std::to_string(ballScene.getEnergy()) + "FPS: " + std::to_string(1.0f / timeSinceLastFrame));
+                            std::to_string(ballScene.getEnergy() * 1e-6) + "FPS: " +
+                            std::to_string(1.0f / timeSinceLastFrame));
         }
         window.clear(sf::Color::Black);
         currentScene->render();
