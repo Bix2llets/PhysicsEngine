@@ -53,8 +53,9 @@ int main() {
         float timeSinceLastFrame = clock.getElapsedTime().asSeconds();
         elapsedTime += timeSinceLastFrame;
         clock.restart();
-        for (; elapsedTime >= Info::POLLING_INTERVAL;
-             elapsedTime -= Info::POLLING_INTERVAL) {
+        int countFrame = 0;
+        for (; elapsedTime >= Info::POLLING_INTERVAL && countFrame < 2;
+             elapsedTime -= Info::POLLING_INTERVAL, countFrame++) {
             // frameCount++;
             // std::cerr << "Frame: " << frameCount << "\n";
             while (std::optional<sf::Event> event = window.pollEvent()) {
@@ -65,7 +66,6 @@ int main() {
                 }
             }
             currentScene->processInput();
-            
             currentScene->update();
 
             window.setTitle("Physics Engine. Total energy: " +

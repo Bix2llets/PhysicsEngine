@@ -159,42 +159,31 @@ void BallScene::resolveBallCollision() {
             ball2.move(1.0f * normalVector * overlapped *
                        (mass2 / (mass1 + mass2)));
 
-            sf::Vector2f vBall1 = ball1.getVelocity();
-            sf::Vector2f vBall2 = ball2.getVelocity();
+            V2f relativeVelocity = ball1.getVelocity() - ball2.getVelocity();
+            /*
+             The frame of reference is on ball2. During which it sees that ball1
+             is moving at the relativeVelocity
+             */
+            float collisionSpeed = relativeVelocity.dot(normalVector);
+            if (collisionSpeed <= 0) continue;
+            // The trajectory of the ball is colliding. Apply change in velocity
+            // to simulate force impact
+            // assert(-1.f <= ballCollisionConservationRatio &&
+            // BOUNCE_FACTOR <= 1.f);
+            float restitution = ballBounceSlider.getValue();
 
-            float v1Normal = vBall1.dot(normalVector);
-            float v2Normal = vBall2.dot(normalVector);
+            // Calculate impulse scalar using conservation of momentum and
+            // energy
+            float impulseScalar = (-(1.0f + restitution) * collisionSpeed) /
+                                  ((1.0f / mass1) + (1.0f / mass2));
 
-            float bounceFactor = ballBounceSlider.getValue();
+            // Apply impulse to both balls
+            V2f impulse = normalVector * impulseScalar;
 
-            if (v1Normal > v2Normal) {
-                // Calculate new velocities
-                float totalMass = mass1 + mass2;
-                float v1Final = ((mass1 - bounceFactor * mass2) * v1Normal +
-                                 (1 + bounceFactor) * mass2 * v2Normal) /
-                                totalMass;
-                float v2Final = ((1 + bounceFactor) * mass1 * v1Normal +
-                                 (mass2 - bounceFactor * mass1) * v2Normal) /
-                                totalMass;
-
-                // For Verlet integration, we need to set proper previous positions
-                // to achieve the desired post-collision velocity
-                sf::Vector2f currentPos1 = ball1.getPosition();
-                sf::Vector2f currentPos2 = ball2.getPosition();
-
-                // We need the full velocity vectors (normal + tangential components)
-                sf::Vector2f tangent(-normalVector.y, normalVector.x);
-                float v1Tangent = vBall1.dot(tangent);
-                float v2Tangent = vBall2.dot(tangent);
-
-                // Construct full post-collision velocities
-                sf::Vector2f v1New = normalVector * v1Final + tangent * v1Tangent;
-                sf::Vector2f v2New = normalVector * v2Final + tangent * v2Tangent;
-
-                // Set previous positions to create these velocities in next update
-                ball1.setPreviousPosition(currentPos1 - v1New * Info::POLLING_INTERVAL);
-                ball2.setPreviousPosition(currentPos2 - v2New * Info::POLLING_INTERVAL);
-            }
+            V2f v1 = ball1.getVelocity();
+            V2f v2 = ball2.getVelocity();
+            ball1.setVelocity(v1 + impulse / mass1);
+            ball2.setVelocity(v2 - impulse / mass2);
         }
 }
 

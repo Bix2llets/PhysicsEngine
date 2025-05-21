@@ -43,7 +43,7 @@ bool Ball::processEvent(std::optional<sf::Event> &event,
 
 void Ball::update() {
     sf::Vector2f nextPosition = 2.f * base.getPosition() - previousPosition +
-                                0.5f * acceleration *
+                                acceleration *
                                     Info::POLLING_INTERVAL *
                                     Info::POLLING_INTERVAL;
     previousPosition = base.getPosition();
