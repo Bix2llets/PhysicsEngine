@@ -95,13 +95,13 @@ void BallScene::processInput() {
 
     for (auto &ball : ballList) {
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up))
-            ball.addForceImpact({0, -ACCELERATE_FORCE});
+            ball.addAcceleration({0, -ACCELERATE_FORCE});
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left))
-            ball.addForceImpact({-ACCELERATE_FORCE, 0});
+            ball.addAcceleration({-ACCELERATE_FORCE, 0});
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Down))
-            ball.addForceImpact({0, ACCELERATE_FORCE});
+            ball.addAcceleration({0, ACCELERATE_FORCE});
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right))
-            ball.addForceImpact({ACCELERATE_FORCE, 0});
+            ball.addAcceleration({ACCELERATE_FORCE, 0});
     }
 }
 
