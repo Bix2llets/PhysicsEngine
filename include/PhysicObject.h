@@ -1,6 +1,7 @@
+#pragma once
 #include "GUIObject.h"
-
-class PhysicObject : public GUIObject {
+#include "interactive.h"
+class PhysicObject : public GUIObject, public Interactive {
     // * Virtual abstract methods
    public:
     virtual void draw(sf::RenderTarget& target,

@@ -9,7 +9,7 @@ class Ball : public PhysicObject {
     // * Constructor and desstructor
     Ball(sf::Vector2f position, float mass = 1, float radius = 10,
          sf::Color color = sf::Color::White);
-    Ball() = default;
+    Ball() : PhysicObject{sf::Vector2f{0.f, 0.f}, 0, false} {};
 
     // * GUIObject part
    private:

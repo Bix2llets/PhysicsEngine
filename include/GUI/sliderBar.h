@@ -5,7 +5,8 @@
 #include <vector>
 
 #include "GUIObject.h"
-class SliderBar : public GUIObject {
+#include "interactive.h"
+class SliderBar : public GUIObject, public Interactive {
    private:
     sf::RectangleShape sliderBase;
     sf::RectangleShape sliderKnob;

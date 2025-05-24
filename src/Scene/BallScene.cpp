@@ -31,13 +31,20 @@ BallScene::BallScene(sf::RenderWindow &window, sf::Vector2f position,
       ballBounceSlider{BALL_BAR_POSITION, BAR_DIMENSION, BALL_BOUNCE_DIVISION,
                        BALL_BOUNCE_VALUES},
       wallBounceSlider{WALL_BAR_POSITION, BAR_DIMENSION, WALL_BOUNCE_DIVISION,
-                       WALL_BOUNCE_VALUES} {}
+                       WALL_BOUNCE_VALUES},
+     EString{ball1, ball2, 1000, 100},
+     ball1{sf::Vector2f{100.f, 50.f}, 1.f,  20.f, sf::Color::White},
+     ball2{sf::Vector2f{50.f, 50.f}, 1.f, 20.f, sf::Color::White} {}
 
 void BallScene::render() {
     for (auto &ball : ballList) window.draw(ball);
     window.draw(gravityStrengthSlider);
     window.draw(ballBounceSlider);
     window.draw(wallBounceSlider);
+    // * Testing
+    window.draw(ball1);
+    window.draw(ball2);
+    window.draw(EString);
 }
 
 void BallScene::update() {
@@ -50,12 +57,18 @@ void BallScene::update() {
     wallBounceSlider.update();
 
     resolveCollision();
+    // * Testing
+    ball1.update();
+    ball2.update();
+    EString.update();
 }
 
 void BallScene::processEvent(std::optional<sf::Event> &event) {
     if (ballBounceSlider.processEvent(event, window)) return;
     if (wallBounceSlider.processEvent(event, window)) return;
     if (gravityStrengthSlider.processEvent(event, window)) return;
+    if (ball1.processEvent(event, window)) return;
+    if (ball2.processEvent(event, window)) return;
     bool isBallEventProcessed = false;
     for (auto &ball : ballList)
         isBallEventProcessed |= ball.processEvent(event, window);
@@ -92,7 +105,8 @@ void BallScene::processInput() {
     ballBounceSlider.processInput(window);
     wallBounceSlider.processInput(window);
     gravityStrengthSlider.processInput(window);
-
+    ball1.processInput(window);
+    ball2.processInput(window);
     for (auto &ball : ballList) {
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up))
             ball.addAcceleration({0, -ACCELERATE_FORCE});

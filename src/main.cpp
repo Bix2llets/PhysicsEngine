@@ -43,6 +43,7 @@ int main() {
                   "Billreal's Physic Engine", sf::Style::Default);
 
     sf::Clock clock;
+    sf::Clock energyClock;
     sf::View view;
 
     BallScene ballScene(window, {0.f, 0.f}, sf::Vector2f{window.getSize()});

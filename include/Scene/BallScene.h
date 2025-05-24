@@ -1,6 +1,7 @@
 #pragma once
 #include "Scene/Scene.h"
 #include "ball.h"
+#include "elasticString.h"
 #include "GUI/sliderBar.h"
 #include <vector>
 class BallScene : public Scene {
@@ -17,6 +18,8 @@ class BallScene : public Scene {
     sf::Vector2f position;
     sf::Vector2f size;
     std::vector<Ball> ballList;
+    Ball ball1, ball2;
+    ElasticString EString;
     void resolveCollision();
     void resolveBallCollision();
     void resolveBorderCollision();
