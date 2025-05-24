@@ -7,7 +7,7 @@
 #include "info.h"
 
 Ball::Ball(sf::Vector2f position, float mass, float radius, sf::Color color)
-    : position{position}, previousPosition{position}, mass{mass}, isHeldLeft{false} {
+    : PhysicObject(position, mass, false), isHeldLeft{false} {
     base.setOrigin({radius, radius});
     base.setPosition(position);
     base.setRadius(radius);
@@ -86,25 +86,4 @@ void Ball::processLeftMouseHolding(sf::RenderWindow &window) {
         base.setPosition(position);
         acceleration = {0.f, 0.f};
     }
-}
-
-void Ball::addForceImpact(sf::Vector2f force) { acceleration += force / mass; }
-void Ball::addAcceleration(sf::Vector2f acc) { acceleration += acc; }
-void Ball::shift(sf::Vector2f displacement) {
-    position += displacement;
-    previousPosition += displacement;
-}
-
-sf::Vector2f Ball::getVelocity() {
-    return (position - previousPosition) / Info::SIMULATION_INTERVAL;
-}
-void Ball::setVelocity(sf::Vector2f velocity) {
-    previousPosition = position - velocity * Info::SIMULATION_INTERVAL;
-}
-void Ball::addVelocity(sf::Vector2f velocity) {
-    previousPosition -= velocity * Info::SIMULATION_INTERVAL;
-}
-
-void Ball::move(sf::Vector2f displacement) {
-    position += displacement;
 }
